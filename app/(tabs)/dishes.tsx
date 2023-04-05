@@ -2,13 +2,21 @@ import { StyleSheet } from 'react-native';
 
 import EditScreenInfo from '../../components/EditScreenInfo';
 import { Text, View } from '../../components/Themed';
+import DishList from '../../components/DishList';
+import { getSavedDishes } from '../SavedDishes';
 
-export default function TabOneScreen() {
+let dishes: Dish[] = [];
+
+export default function TabTwoScreen() {
+  async function doSomethingWithSavedDishes() {
+    dishes = await getSavedDishes();
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
+      <Text style={styles.title}>Dishes</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      <DishList dishes={dishes} />
     </View>
   );
 }
