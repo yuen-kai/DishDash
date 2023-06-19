@@ -4,7 +4,7 @@ import EditScreenInfo from "../../components/EditScreenInfo";
 import { Text, View } from "../../components/Themed";
 import { getSavedDishes } from "../SavedDishes";
 import { FAB, Overlay, Button, Input, AirbnbRating } from "@rneui/themed";
-import React, { useMemo } from "react";
+import React from "react";
 import { FlatList, useColorScheme } from "react-native";
 import Colors from "c:/Users/cykai/DishDash/constants/Colors";
 import DishItem from "c:/Users/cykai/DishDash/components/DishItem";
@@ -19,7 +19,11 @@ export default function TabTwoScreen() {
   const [rating, setRating] = React.useState(3);
   const [expanded, setExpanded] = React.useState(false);
   // const [checked, setChecked] = React.useState([]);
-  const [tags, setTags] = React.useState<String[]>([]);
+  const [tags, setTags] = React.useState<String[]>([
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+  ]);
   const [selectedTags, setSelectedTags] = React.useState<Set<String>>(
     new Set()
   );
@@ -72,7 +76,7 @@ export default function TabTwoScreen() {
 
   React.useEffect(() => {
     getTags();
-  });
+  },[]);
 
   const ListItemWithCheckBox = ({ l }) => {
     const checked = false;
@@ -86,7 +90,6 @@ export default function TabTwoScreen() {
           uncheckedIcon="checkbox-blank-outline"
           checked={checked}
           onPress={() => {
-            console.log("Hello");
             changeFilter(l);
           }}
           containerStyle={{
@@ -118,11 +121,11 @@ export default function TabTwoScreen() {
               "Breakfast",
               "Lunch",
               "Dinner",
-              // "Pork",
-              // "Chicken",
-              // "Vegetarian",
-              // "Weekday",
-              // "Weekend",
+              "Pork",
+              "Chicken",
+              "Vegetarian",
+              "Weekday",
+              "Weekend",
             ]
       );
     } catch (e) {
@@ -131,7 +134,6 @@ export default function TabTwoScreen() {
   }
 
   function changeFilter(l: String) {
-    console.log("hmmmm");
     const updatedTags = new Set(selectedTags);
     if (selectedTags.has(l)) {
       updatedTags.delete(l);
@@ -146,7 +148,6 @@ export default function TabTwoScreen() {
             dish.tags.some((tag) => updatedTags.has(tag))
           )
     );
-    console.log(updatedTags);
   }
   // async function doSomethingWithSavedDishes() {
   //   dishes = await getSavedDishes();
@@ -187,46 +188,44 @@ export default function TabTwoScreen() {
           setExpanded(!expanded);
         }}
       >
-        {tags.map((l: String, i: number) => (
-          <ListItem
-            key={i}
+      {tags.map((l: String, i: number) => (
+        <ListItem
+          key={i}
+          onPress={() => {
+            changeFilter(l);
+          }}
+          bottomDivider
+          containerStyle={{
+            backgroundColor: Colors[colorScheme ?? "light"]["background"],
+            width: 300,
+          }}
+        >
+          <ListItem.CheckBox
+            // Use ThemeProvider to change the defaults of the checkbox
+            iconType="material-community"
+            checkedIcon="checkbox-marked"
+            uncheckedIcon="checkbox-blank-outline"
+            checked={selectedTags.has(l)}
             onPress={() => {
-              console.log("hello")
               changeFilter(l);
             }}
-            bottomDivider
             containerStyle={{
               backgroundColor: Colors[colorScheme ?? "light"]["background"],
-              width: 300,
+            }}
+          />
+          <ListItem.Content
+            style={{
+              backgroundColor: Colors[colorScheme ?? "light"]["background"],
             }}
           >
-            <ListItem.CheckBox
-              // Use ThemeProvider to change the defaults of the checkbox
-              iconType="material-community"
-              checkedIcon="checkbox-marked"
-              uncheckedIcon="checkbox-blank-outline"
-              checked={selectedTags.has(l)}
-              onPress={() => {
-                console.log("Hello");
-                changeFilter(l);
-              }}
-              containerStyle={{
-                backgroundColor: Colors[colorScheme ?? "light"]["background"],
-              }}
-            />
-            <ListItem.Content
-              style={{
-                backgroundColor: Colors[colorScheme ?? "light"]["background"],
-              }}
+            <ListItem.Title
+              style={{ color: Colors[colorScheme ?? "light"]["text"] }}
             >
-              <ListItem.Title
-                style={{ color: Colors[colorScheme ?? "light"]["text"] }}
-              >
-                {l}
-              </ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        ))}
+              {l}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+      ))}
       </ListItem.Accordion>
 
       <FlatList
