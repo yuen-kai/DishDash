@@ -19,11 +19,10 @@ export default function TabTwoScreen() {
   const [rating, setRating] = React.useState(3);
   const [expanded, setExpanded] = React.useState(false);
   // const [checked, setChecked] = React.useState([]);
-  const [tags, setTags] = React.useState<String[]>([
-    "Breakfast",
-    "Lunch",
-    "Dinner",
-  ]);
+  const [tags, setTags] = React.useState(() => {
+    getTags(); // Call the function when the component mounts
+    return []; // Initial state value
+  });
   const [selectedTags, setSelectedTags] = React.useState<Set<String>>(
     new Set()
   );
@@ -74,9 +73,7 @@ export default function TabTwoScreen() {
     },
   ];
 
-  React.useEffect(() => {
-    getTags();
-  },[]);
+  // getTags();
 
   const ListItemWithCheckBox = ({ l }) => {
     const checked = false;
