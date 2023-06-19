@@ -9,11 +9,13 @@ interface Props {
 }
 
 const DishItem: React.FC<Props> = ({ dish }) => {
+  const colorScheme = useColorScheme();
+
   return (
-    <ListItem containerStyle={{backgroundColor: Colors[useColorScheme() ?? 'light']['background']}} bottomDivider={true}>
-      <ListItem.Content style={{backgroundColor: Colors[useColorScheme() ?? 'light']['background']}}>
-        <ListItem.Title style={{color: Colors[useColorScheme() ?? 'light']['text']}}>{dish.name}</ListItem.Title>
-        <ListItem.Subtitle style={{color: Colors[useColorScheme() ?? 'light']['text']}}>{dish.tags.join()}</ListItem.Subtitle>
+    <ListItem containerStyle={{backgroundColor: Colors[colorScheme ?? 'light']['background']}} bottomDivider={true}>
+      <ListItem.Content style={{backgroundColor: Colors[colorScheme ?? 'light']['background']}}>
+        <ListItem.Title style={{color: Colors[colorScheme ?? 'light']['text']}}>{dish.name}</ListItem.Title>
+        <ListItem.Subtitle style={{color: Colors[colorScheme ?? 'light']['text']}}>{dish.tags.join()}</ListItem.Subtitle>
       </ListItem.Content>
     </ListItem>
   );
