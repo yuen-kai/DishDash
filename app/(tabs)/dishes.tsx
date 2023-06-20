@@ -4,7 +4,7 @@ import EditScreenInfo from "../../components/EditScreenInfo";
 import { Text, View } from "../../components/Themed";
 import { getSavedDishes } from "../SavedDishes";
 import { FAB, Overlay, Button, Input, AirbnbRating } from "@rneui/themed";
-import React from "react";
+import React, { useMemo } from "react";
 import { FlatList, useColorScheme } from "react-native";
 import Colors from "c:/Users/cykai/DishDash/constants/Colors";
 import DishItem from "c:/Users/cykai/DishDash/components/DishItem";
@@ -16,8 +16,10 @@ export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
   const [visible, setVisible] = React.useState(false);
   const [name, setName] = React.useState("");
+  const [eaten, setEaten] = React.useState("");
   const [rating, setRating] = React.useState(3);
   const [expanded, setExpanded] = React.useState(false);
+  const [expandedNew, setExpandedNew] = React.useState(false);
   // const [checked, setChecked] = React.useState([]);
   const [tags, setTags] = React.useState(() => {
     getTags(); // Call the function when the component mounts
@@ -26,6 +28,7 @@ export default function TabTwoScreen() {
   const [selectedTags, setSelectedTags] = React.useState<Set<String>>(
     new Set()
   );
+  const [tagsChecked, setTagsChecked] = React.useState<boolean[]>([]);
   const [dishes, setDishes] = React.useState<Dish[]>([
     {
       id: 1,
@@ -111,7 +114,7 @@ export default function TabTwoScreen() {
   async function getTags() {
     try {
       const jsonValue = await AsyncStorage.getItem("tags");
-      setTags(
+      let tagsArray =
         jsonValue != null
           ? JSON.parse(jsonValue)
           : [
@@ -123,8 +126,9 @@ export default function TabTwoScreen() {
               "Vegetarian",
               "Weekday",
               "Weekend",
-            ]
-      );
+            ];
+      setTags(tagsArray);
+      setTagsChecked(new Array(tagsArray.length).fill(false));
     } catch (e) {
       // error reading value
     }
@@ -146,18 +150,28 @@ export default function TabTwoScreen() {
           )
     );
   }
+
+  function changeTags(i: number) {
+    let updatedTags = [...tagsChecked];
+    updatedTags[i] = !updatedTags[i];
+    setTagsChecked(updatedTags);
+  }
+
+  const listOfTags = () => {
+    let arrayOfTags: String[] = tags.filter(
+      (value, index) => tagsChecked[index]
+    );
+    if (arrayOfTags.length > 0) {
+      return "Tags: " + arrayOfTags.join(", ");
+    }
+    return "No tags";
+  };
   // async function doSomethingWithSavedDishes() {
   //   dishes = await getSavedDishes();
   // }
 
   return (
     <View style={styles.container}>
-      <Text title={true}>Dishes</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
       <ListItem.Accordion
         content={
           <ListItem.Content>
@@ -171,7 +185,6 @@ export default function TabTwoScreen() {
         containerStyle={{
           backgroundColor: Colors[colorScheme ?? "light"]["background"],
           width: "100%",
-          alignItems: "stretch",
         }}
         isExpanded={expanded}
         icon={
@@ -181,48 +194,57 @@ export default function TabTwoScreen() {
             color={Colors[colorScheme ?? "light"]["text"]}
           />
         }
+        bottomDivider
         onPress={() => {
           setExpanded(!expanded);
         }}
       >
-      {tags.map((l: String, i: number) => (
-        <ListItem
-          key={i}
-          onPress={() => {
-            changeFilter(l);
+        <FlatList
+          data={tags}
+          keyExtractor={(item) => item}
+          renderItem={({ item, index }) => {
+            return (
+              <ListItem
+                key={index}
+                onPress={() => {
+                  changeFilter(item);
+                }}
+                bottomDivider
+                containerStyle={{
+                  backgroundColor: Colors[colorScheme ?? "light"]["background"],
+                  width: 300,
+                }}
+              >
+                <ListItem.CheckBox
+                  // Use ThemeProvider to change the defaults of the checkbox
+                  iconType="material-community"
+                  checkedIcon="checkbox-marked"
+                  uncheckedIcon="checkbox-blank-outline"
+                  checked={selectedTags.has(item)}
+                  onPress={() => {
+                    changeFilter(item);
+                  }}
+                  containerStyle={{
+                    backgroundColor:
+                      Colors[colorScheme ?? "light"]["background"],
+                  }}
+                />
+                <ListItem.Content
+                  style={{
+                    backgroundColor:
+                      Colors[colorScheme ?? "light"]["background"],
+                  }}
+                >
+                  <ListItem.Title
+                    style={{ color: Colors[colorScheme ?? "light"]["text"] }}
+                  >
+                    {item}
+                  </ListItem.Title>
+                </ListItem.Content>
+              </ListItem>
+            );
           }}
-          bottomDivider
-          containerStyle={{
-            backgroundColor: Colors[colorScheme ?? "light"]["background"],
-            width: 300,
-          }}
-        >
-          <ListItem.CheckBox
-            // Use ThemeProvider to change the defaults of the checkbox
-            iconType="material-community"
-            checkedIcon="checkbox-marked"
-            uncheckedIcon="checkbox-blank-outline"
-            checked={selectedTags.has(l)}
-            onPress={() => {
-              changeFilter(l);
-            }}
-            containerStyle={{
-              backgroundColor: Colors[colorScheme ?? "light"]["background"],
-            }}
-          />
-          <ListItem.Content
-            style={{
-              backgroundColor: Colors[colorScheme ?? "light"]["background"],
-            }}
-          >
-            <ListItem.Title
-              style={{ color: Colors[colorScheme ?? "light"]["text"] }}
-            >
-              {l}
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
-      ))}
+        />
       </ListItem.Accordion>
 
       <FlatList
@@ -266,18 +288,133 @@ export default function TabTwoScreen() {
         color="blue"
         onPress={() => setVisible(true)}
       />
-      <Overlay isVisible={visible} onBackdropPress={() => setVisible(false)}>
+      <Overlay
+        isVisible={visible}
+        onBackdropPress={() => setVisible(false)}
+        overlayStyle={{
+          width: "80%",
+          backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
+        }}
+      >
         <Text title={true}>New Dish</Text>
         <Input
-          containerStyle={{ width: "100%" }}
           placeholder="Add name"
           onChangeText={(value) => setName(value)}
+          inputStyle={{ color: Colors[colorScheme ?? "light"]["text"] }}
           value={name != "" ? name : ""}
+          renderErrorMessage={false}
+          errorMessage={
+            dishes.some((value) => value.name.trim() == name.trim())
+              ? "Name already used!"
+              : ""
+          }
+          errorStyle={{ fontSize: 15 }}
+          containerStyle={{ marginTop: 10 }}
         />
+        <Input
+          placeholder="Last Eaten (days)"
+          onChangeText={(value) => setEaten(value)}
+          inputStyle={{ color: Colors[colorScheme ?? "light"]["text"] }}
+          value={eaten}
+          renderErrorMessage={false}
+          errorMessage={isNaN(eaten) ? "Invalid!" : ""}
+          errorStyle={{ fontSize: 15 }}
+          keyboardType="numeric"
+          containerStyle={{ marginTop: 10 }}
+        />
+        <ListItem.Accordion
+          content={
+            <ListItem.Content>
+              <ListItem.Title
+                style={{ color: Colors[colorScheme ?? "light"]["text"] }}
+              >
+                {listOfTags()}
+              </ListItem.Title>
+            </ListItem.Content>
+          }
+          containerStyle={{
+            backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
+            width: "100%",
+          }}
+          isExpanded={expandedNew}
+          icon={
+            <Icon
+              name="tag"
+              type="material-community"
+              color={Colors[colorScheme ?? "light"]["text"]}
+            />
+          }
+          bottomDivider
+          onPress={() => {
+            setExpandedNew(!expandedNew);
+          }}
+        >
+          <FlatList
+            data={tags}
+            keyExtractor={(item) => item}
+            renderItem={({ item, index }) => {
+              return (
+                <ListItem
+                  key={index}
+                  onPress={() => {
+                    changeTags(index);
+                  }}
+                  bottomDivider
+                  containerStyle={{
+                    backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
+                    width: 300,
+                  }}
+                >
+                  <ListItem.CheckBox
+                    // Use ThemeProvider to change the defaults of the checkbox
+                    iconType="material-community"
+                    checkedIcon="checkbox-marked"
+                    uncheckedIcon="checkbox-blank-outline"
+                    checked={tagsChecked[index]}
+                    onPress={() => {
+                      changeTags(index);
+                    }}
+                    containerStyle={{
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"]["overlay"],
+                    }}
+                  />
+                  <ListItem.Content
+                    style={{
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"]["overlay"],
+                    }}
+                  >
+                    <ListItem.Title
+                      style={{ color: Colors[colorScheme ?? "light"]["text"] }}
+                    >
+                      {item}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                </ListItem>
+              );
+            }}
+          />
+        </ListItem.Accordion>
+
         <AirbnbRating
           showRating={false}
           onFinishRating={(value) => setRating(value)}
         />
+        <View style={{ flexDirection: "row", marginTop: 10 }}>
+          
+          <Button
+            title="Cancel"
+            containerStyle={{ flex: 1 }}
+            buttonStyle={{ backgroundColor: "#777" }}
+            onPress={()=>setVisible(false)}
+          />
+          <Button
+            title="Save"
+            containerStyle={{ flex: 1 }}
+            buttonStyle={{ backgroundColor: "#777" }}
+          />
+        </View>
       </Overlay>
     </View>
   );
