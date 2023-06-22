@@ -192,10 +192,10 @@ export default function TabTwoScreen() {
     );
     saveAllDishes(updatedDishes);
     setVisible(false);
-    setName("")
+    setName("");
     setTagsChecked(tagsChecked.fill(false));
     setEaten("");
-    setRating(3)
+    setRating(3);
   }
 
   function handleDelete(dish: Dish) {
@@ -212,16 +212,22 @@ export default function TabTwoScreen() {
     saveAllDishes(updatedDishes);
   }
 
-  function addTag(){
+  function handleDeleteTag(tag: string) {
     let updatedTags = [...tags];
-    updatedTags.splice(tags.length-1,0,newTag)
+    updatedTags.splice(tags.indexOf(tag), 1);
     setTags(updatedTags);
-    saveTags(updatedTags)
-    setNewTag("")
-    
+    saveTags(updatedTags);
   }
 
-  async function saveTags(updatedTags: String[]){
+  function addTag() {
+    let updatedTags = [...tags];
+    updatedTags.splice(tags.length - 1, 0, newTag);
+    setTags(updatedTags);
+    saveTags(updatedTags);
+    setNewTag("");
+  }
+
+  async function saveTags(updatedTags: String[]) {
     try {
       const jsonValue = JSON.stringify(updatedTags);
       await AsyncStorage.setItem("tags", jsonValue);
@@ -263,6 +269,64 @@ export default function TabTwoScreen() {
           data={tags}
           keyExtractor={(item) => item}
           renderItem={({ item, index }) => {
+            if (index == tags.length - 1) {
+              return (
+                <ListItem
+                  key={index}
+                  onPress={() => {
+                    changeFilter(item);
+                  }}
+                  disabled={newTag == ""}
+                  bottomDivider
+                  containerStyle={{
+                    backgroundColor: Colors[colorScheme ?? "light"]["background"],
+                    width: 300,
+                  }}
+                >
+                  <ListItem.CheckBox
+                    // Use ThemeProvider to change the defaults of the checkbox
+                    iconType="material-community"
+                    checkedIcon="checkbox-marked"
+                    uncheckedIcon="checkbox-blank-outline"
+                    checked={selectedTags.has(item)}
+                    disabled={newTag == ""}
+                    onPress={() => {
+                      changeFilter(item);
+                    }}
+                    containerStyle={{
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"]["overlay"],
+                    }}
+                  />
+                  <ListItem.Content
+                    style={{
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"]["background"],
+                    }}
+                  >
+                    <Input
+                      placeholder="New Tag"
+                      onChangeText={(value) => setNewTag(value)}
+                      inputStyle={{
+                        color: Colors[colorScheme ?? "light"]["text"],
+                      }}
+                      value={newTag}
+                      renderErrorMessage={false}
+                      errorMessage={
+                        tags
+                          .slice(0, -1)
+                          .some((value) => value.trim() == newTag.trim())
+                          ? "Name already used!"
+                          : ""
+                      }
+                      errorStyle={{ fontSize: 15 }}
+                      containerStyle={{ marginTop: 10 }}
+                      onSubmitEditing={() => addTag()}
+                    />
+                  </ListItem.Content>
+                </ListItem>
+              );
+            }
             return (
               <ListItem
                 key={index}
@@ -301,6 +365,12 @@ export default function TabTwoScreen() {
                     {item}
                   </ListItem.Title>
                 </ListItem.Content>
+                <Icon
+                  name="delete"
+                  type="material"
+                  color="grey"
+                  onPress={() => handleDeleteTag(item)}
+                />
               </ListItem>
             );
           }}
@@ -464,15 +534,15 @@ export default function TabTwoScreen() {
                         value={newTag}
                         renderErrorMessage={false}
                         errorMessage={
-                          tags.some(
-                            (value) => value.trim() == newTag.trim()
-                          )
+                          tags
+                            .slice(0, -1)
+                            .some((value) => value.trim() == newTag.trim())
                             ? "Name already used!"
                             : ""
                         }
                         errorStyle={{ fontSize: 15 }}
                         containerStyle={{ marginTop: 10 }}
-                        onSubmitEditing={()=>addTag()}
+                        onSubmitEditing={() => addTag()}
                       />
                     </ListItem.Content>
                   </ListItem>
@@ -516,6 +586,12 @@ export default function TabTwoScreen() {
                       {item}
                     </ListItem.Title>
                   </ListItem.Content>
+                  <Icon
+                    name="delete"
+                    type="material"
+                    color="grey"
+                    onPress={() => handleDeleteTag(item)}
+                  />
                 </ListItem>
               );
             }}
