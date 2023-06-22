@@ -218,6 +218,7 @@ export default function TabTwoScreen() {
     setTags(updatedTags);
     saveTags(updatedTags)
     setNewTag("")
+    
   }
 
   async function saveTags(updatedTags: String[]){
