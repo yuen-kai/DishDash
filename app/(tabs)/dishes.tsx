@@ -161,6 +161,16 @@ export default function TabTwoScreen() {
     }
     return "No tags";
   };
+
+  const listOfTagsDishes = () => {
+    let arrayOfTags: String[] = tags.filter((value, index) =>
+      selectedTags.has(value)
+    );
+    if (arrayOfTags.length > 0) {
+      return "Tags: " + arrayOfTags.join(", ");
+    }
+    return "All dishes";
+  };
   // async function doSomethingWithSavedDishes() {
   //   dishes = await getSavedDishes();
   // }
@@ -201,6 +211,10 @@ export default function TabTwoScreen() {
   function handleDelete(dish: Dish) {
     let updatedDishes = [...allDishes];
     updatedDishes.splice(allDishes.indexOf(dish), 1);
+    saveDishes(updatedDishes);
+  }
+
+  function saveDishes(updatedDishes: Dish[]) {
     setAllDishes(updatedDishes);
     setDishes(
       selectedTags.size == 0
@@ -215,6 +229,14 @@ export default function TabTwoScreen() {
   function handleDeleteTag(tag: string) {
     let updatedTags = [...tags];
     updatedTags.splice(tags.indexOf(tag), 1);
+    let updatedDishes = [...allDishes];
+    for (let i = 0; i < updatedDishes.length; i++) {
+      let index = updatedDishes[i].tags.indexOf(tag);
+      if (index > -1) {
+        updatedDishes[i].tags.splice(index, 1);
+      }
+    }
+    saveDishes(updatedDishes);
     setTags(updatedTags);
     saveTags(updatedTags);
   }
@@ -244,7 +266,7 @@ export default function TabTwoScreen() {
             <ListItem.Title
               style={{ color: Colors[colorScheme ?? "light"]["text"] }}
             >
-              Dishes
+              {listOfTagsDishes()}
             </ListItem.Title>
           </ListItem.Content>
         }
@@ -269,109 +291,12 @@ export default function TabTwoScreen() {
           data={tags}
           keyExtractor={(item) => item}
           renderItem={({ item, index }) => {
-            if (index == tags.length - 1) {
-              return (
-                <ListItem
-                  key={index}
-                  onPress={() => {
-                    changeFilter(item);
-                  }}
-                  disabled={newTag == ""}
-                  bottomDivider
-                  containerStyle={{
-                    backgroundColor: Colors[colorScheme ?? "light"]["background"],
-                    width: 300,
-                  }}
-                >
-                  <ListItem.CheckBox
-                    // Use ThemeProvider to change the defaults of the checkbox
-                    iconType="material-community"
-                    checkedIcon="checkbox-marked"
-                    uncheckedIcon="checkbox-blank-outline"
-                    checked={selectedTags.has(item)}
-                    disabled={newTag == ""}
-                    onPress={() => {
-                      changeFilter(item);
-                    }}
-                    containerStyle={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"]["overlay"],
-                    }}
-                  />
-                  <ListItem.Content
-                    style={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"]["background"],
-                    }}
-                  >
-                    <Input
-                      placeholder="New Tag"
-                      onChangeText={(value) => setNewTag(value)}
-                      inputStyle={{
-                        color: Colors[colorScheme ?? "light"]["text"],
-                      }}
-                      value={newTag}
-                      renderErrorMessage={false}
-                      errorMessage={
-                        tags
-                          .slice(0, -1)
-                          .some((value) => value.trim() == newTag.trim())
-                          ? "Name already used!"
-                          : ""
-                      }
-                      errorStyle={{ fontSize: 15 }}
-                      containerStyle={{ marginTop: 10 }}
-                      onSubmitEditing={() => addTag()}
-                    />
-                  </ListItem.Content>
-                </ListItem>
-              );
-            }
-            return (
-              <ListItem
-                key={index}
-                onPress={() => {
-                  changeFilter(item);
-                }}
-                bottomDivider
-                containerStyle={{
-                  backgroundColor: Colors[colorScheme ?? "light"]["background"],
-                  width: 300,
-                }}
-              >
-                <ListItem.CheckBox
-                  // Use ThemeProvider to change the defaults of the checkbox
-                  iconType="material-community"
-                  checkedIcon="checkbox-marked"
-                  uncheckedIcon="checkbox-blank-outline"
-                  checked={selectedTags.has(item)}
-                  onPress={() => {
-                    changeFilter(item);
-                  }}
-                  containerStyle={{
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"]["background"],
-                  }}
-                />
-                <ListItem.Content
-                  style={{
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"]["background"],
-                  }}
-                >
-                  <ListItem.Title
-                    style={{ color: Colors[colorScheme ?? "light"]["text"] }}
-                  >
-                    {item}
-                  </ListItem.Title>
-                </ListItem.Content>
-                <Icon
-                  name="delete"
-                  type="material"
-                  color="grey"
-                  onPress={() => handleDeleteTag(item)}
-                />
-              </ListItem>
+            return TagsList(
+              index,
+              () => changeFilter(item),
+              "background",
+              selectedTags.has(item),
+              item
             );
           }}
         />
@@ -489,110 +414,12 @@ export default function TabTwoScreen() {
             data={tags}
             keyExtractor={(item) => item}
             renderItem={({ item, index }) => {
-              if (index == tags.length - 1) {
-                return (
-                  <ListItem
-                    key={index}
-                    onPress={() => {
-                      changeTags(index);
-                    }}
-                    disabled={newTag == ""}
-                    bottomDivider
-                    containerStyle={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"]["overlay"],
-                      width: 300,
-                    }}
-                  >
-                    <ListItem.CheckBox
-                      // Use ThemeProvider to change the defaults of the checkbox
-                      iconType="material-community"
-                      checkedIcon="checkbox-marked"
-                      uncheckedIcon="checkbox-blank-outline"
-                      checked={tagsChecked[index]}
-                      disabled={newTag == ""}
-                      onPress={() => {
-                        changeTags(index);
-                      }}
-                      containerStyle={{
-                        backgroundColor:
-                          Colors[colorScheme ?? "light"]["overlay"],
-                      }}
-                    />
-                    <ListItem.Content
-                      style={{
-                        backgroundColor:
-                          Colors[colorScheme ?? "light"]["overlay"],
-                      }}
-                    >
-                      <Input
-                        placeholder="New Tag"
-                        onChangeText={(value) => setNewTag(value)}
-                        inputStyle={{
-                          color: Colors[colorScheme ?? "light"]["text"],
-                        }}
-                        value={newTag}
-                        renderErrorMessage={false}
-                        errorMessage={
-                          tags
-                            .slice(0, -1)
-                            .some((value) => value.trim() == newTag.trim())
-                            ? "Name already used!"
-                            : ""
-                        }
-                        errorStyle={{ fontSize: 15 }}
-                        containerStyle={{ marginTop: 10 }}
-                        onSubmitEditing={() => addTag()}
-                      />
-                    </ListItem.Content>
-                  </ListItem>
-                );
-              }
-              return (
-                <ListItem
-                  key={index}
-                  onPress={() => {
-                    changeTags(index);
-                  }}
-                  bottomDivider
-                  containerStyle={{
-                    backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
-                    width: 300,
-                  }}
-                >
-                  <ListItem.CheckBox
-                    // Use ThemeProvider to change the defaults of the checkbox
-                    iconType="material-community"
-                    checkedIcon="checkbox-marked"
-                    uncheckedIcon="checkbox-blank-outline"
-                    checked={tagsChecked[index]}
-                    onPress={() => {
-                      changeTags(index);
-                    }}
-                    containerStyle={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"]["overlay"],
-                    }}
-                  />
-                  <ListItem.Content
-                    style={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"]["overlay"],
-                    }}
-                  >
-                    <ListItem.Title
-                      style={{ color: Colors[colorScheme ?? "light"]["text"] }}
-                    >
-                      {item}
-                    </ListItem.Title>
-                  </ListItem.Content>
-                  <Icon
-                    name="delete"
-                    type="material"
-                    color="grey"
-                    onPress={() => handleDeleteTag(item)}
-                  />
-                </ListItem>
+              return TagsList(
+                index,
+                () => changeTags(index),
+                "overlay",
+                tagsChecked[index],
+                item
               );
             }}
           />
@@ -626,6 +453,79 @@ export default function TabTwoScreen() {
       </Overlay>
     </View>
   );
+
+  function TagsList(
+    index: number,
+    onPress: () => void,
+    background: string,
+    checkedFunction: boolean,
+    item: string
+  ) {
+    return (
+      <ListItem
+        key={index}
+        onPress={onPress}
+        disabled={index == tags.length - 1}
+        bottomDivider
+        containerStyle={{
+          backgroundColor: Colors[colorScheme ?? "light"][background],
+          width: 300,
+        }}
+      >
+        <ListItem.CheckBox
+          // Use ThemeProvider to change the defaults of the checkbox
+          iconType="material-community"
+          checkedIcon="checkbox-marked"
+          uncheckedIcon="checkbox-blank-outline"
+          checked={checkedFunction}
+          disabled={index == tags.length - 1}
+          onPress={onPress}
+          containerStyle={{
+            backgroundColor: Colors[colorScheme ?? "light"][background],
+          }}
+        />
+        <ListItem.Content
+          style={{
+            backgroundColor: Colors[colorScheme ?? "light"][background],
+          }}
+        >
+          {index == tags.length - 1 ? (
+            <Input
+              placeholder="New Tag"
+              onChangeText={(value) => setNewTag(value)}
+              inputStyle={{
+                color: Colors[colorScheme ?? "light"]["text"],
+              }}
+              value={newTag}
+              renderErrorMessage={false}
+              errorMessage={
+                tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
+                  ? "Name already used!"
+                  : ""
+              }
+              errorStyle={{ fontSize: 15 }}
+              containerStyle={{ marginTop: 10 }}
+              onSubmitEditing={() => addTag()}
+            />
+          ) : (
+            <ListItem.Title
+              style={{
+                color: Colors[colorScheme ?? "light"]["text"],
+              }}
+            >
+              {item}
+            </ListItem.Title>
+          )}
+        </ListItem.Content>
+        <Icon
+          name="delete"
+          type="material"
+          color="grey"
+          onPress={() => handleDeleteTag(item)}
+        />
+      </ListItem>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
