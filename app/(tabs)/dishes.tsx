@@ -242,6 +242,12 @@ export default function TabTwoScreen() {
   }
 
   function addTag() {
+    if (
+      newTag == "" ||
+      tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
+    ) {
+      return;
+    }
     let updatedTags = [...tags];
     updatedTags.splice(tags.length - 1, 0, newTag);
     setTags(updatedTags);
@@ -517,12 +523,31 @@ export default function TabTwoScreen() {
             </ListItem.Title>
           )}
         </ListItem.Content>
-        <Icon
-          name="delete"
-          type="material"
-          color="grey"
-          onPress={() => handleDeleteTag(item)}
-        />
+        {index != tags.length - 1 ? (
+          <Icon
+            name="delete"
+            type="material"
+            color="grey"
+            onPress={() => handleDeleteTag(item)}
+          />
+        ) : (
+          <Icon
+            name="check"
+            type="material"
+            color={
+              newTag == "" ||
+              tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
+                ? "grey"
+                : "green"
+            }
+            onPress={() => addTag()}
+            disabled={
+              newTag == "" ||
+              tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
+            }
+            disabledStyle={{ backgroundColor: "rgba(0,0,0,0)" }}
+          />
+        )}
       </ListItem>
     );
   }
