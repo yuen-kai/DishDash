@@ -3168,6 +3168,11 @@ expo-asset@~8.10.1:
     path-browserify "^1.0.0"
     url-parse "^1.5.9"
 
+expo-calendar@^11.3.0:
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/expo-calendar/-/expo-calendar-11.3.0.tgz#288b09783dd7c7a8ef0a3ed2d8be464a55e2241e"
+  integrity sha512-6FkLpVZhePRkklqaaZ3h8VzZSTNJkmQlQqnEFT/gQgG709S9yVmkei2uVlT1Fd6PpZ4i25RKO61KA1ROYGcX1w==
+
 expo-constants@~14.4.2:
   version "14.4.2"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-14.4.2.tgz#cac5e8b524069545739b8d8595ce96cc5be6578c"

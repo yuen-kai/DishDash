@@ -12,12 +12,14 @@ import {
   Dialog,
   Icon,
   ListItem,
+  Card,
 } from "@rneui/themed";
 import React from "react";
 import { FlatList, useColorScheme } from "react-native";
 import Colors from "./Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
+import * as Calendar from 'expo-calendar';
 
 export default function TabTwoScreen() {
   // const colorScheme = useColorScheme();
@@ -73,16 +75,18 @@ export default function TabTwoScreen() {
     const background = props.background;
     const checkedFunction = props.checkedFunction;
     const item = props.item;
-
     return (
       <ListItem
         key={index}
         onPress={onPress}
         disabled={index == tags.length - 1}
         bottomDivider
-        containerStyle={[{
-          backgroundColor: Colors[colorScheme ?? "light"][background]
-        },background=="background"?{width: 400}:null]}
+        containerStyle={[
+          {
+            backgroundColor: Colors[colorScheme ?? "light"][background],
+          },
+          background == "background" ? { width: 400 } : null,
+        ]}
       >
         <ListItem.CheckBox
           // Use ThemeProvider to change the defaults of the checkbox
@@ -158,39 +162,6 @@ export default function TabTwoScreen() {
     );
   };
 
-  const ListItemWithCheckBox = ({ l }: { l: String }) => {
-    const checked = false;
-
-    return (
-      <>
-        <ListItem.CheckBox
-          // Use ThemeProvider to change the defaults of the checkbox
-          iconType="material-community"
-          checkedIcon="checkbox-marked"
-          uncheckedIcon="checkbox-blank-outline"
-          checked={checked}
-          onPress={() => {
-            changeFilter(l);
-          }}
-          containerStyle={{
-            backgroundColor: Colors[colorScheme ?? "light"]["background"],
-          }}
-        />
-        <ListItem.Content
-          style={{
-            backgroundColor: Colors[colorScheme ?? "light"]["background"],
-          }}
-        >
-          <ListItem.Title
-            style={{ color: Colors[colorScheme ?? "light"]["text"] }}
-          >
-            {l}
-          </ListItem.Title>
-        </ListItem.Content>
-      </>
-    );
-  };
-
   async function getTags() {
     try {
       const jsonValue = await AsyncStorage.getItem("tags");
@@ -218,12 +189,43 @@ export default function TabTwoScreen() {
     }
   }
 
+  async function checkVegetarian() {
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    if (status === "granted") {
+      const calendars = await Calendar.getCalendarsAsync(
+        Calendar.EntityTypes.EVENT
+      );
+      let date = new Date(2023, 7, 16)
+      const calendarIds = calendars.map((calendar) => calendar.id)
+      let events = await Calendar.getEventsAsync(
+        calendarIds,
+        new Date(new Date().setDate(new Date().getDate()-1)),
+        new Date(new Date().setDate(new Date().getDate()+1))
+      )
+      return events.some((event) => event.title.includes("初一")) || events.some((event) => event.title.includes("十五"));
+    }
+  }
+
   async function setupDateSpecificTags(savedDishes: Dish[]) {
     let dateSpecificTagsList = new Set<String>();
 
-    //[Insert check if is vegitarian day]
+    if (new Date().getMonth() === 3 && new Date().getDate() === 1) {
+      setDishes([
+        {
+          name: "好吃的东西",
+          tags: [],
+          lastEaten: -1,
+          rating: -1,
+          recipe: "",
+        },
+      ]);
+      return;
+    }
 
-    if (new Date().getDay() == 0) {
+    if(await checkVegetarian()){
+      dateSpecificTagsList.add("Vegetarian");
+    }
+    else if (new Date().getDay() == 0) {
       dateSpecificTagsList.add("Weekend");
     } else if (new Date().getDay() < 5) {
       dateSpecificTagsList.add("Weekday");
@@ -247,21 +249,25 @@ export default function TabTwoScreen() {
                 tags: ["Lunch", "Dinner", "Pork"],
                 lastEaten: 1,
                 rating: 3,
+                recipe: "",
               },
               {
                 name: "Burger",
                 tags: ["Chicken", "Lunch", "Weekend"],
                 lastEaten: 1,
                 rating: 3,
+                recipe: "",
               },
               {
                 name: "Pasta",
                 tags: ["Chicken", "Lunch", "Weekend"],
                 lastEaten: 1,
                 rating: 3,
+                recipe: "",
               },
             ];
       setAllDishes(savedDishes);
+      saveAllDishes(savedDishes);
       setupDateSpecificTags(savedDishes);
     } catch (e) {
       // error reading value
@@ -283,6 +289,7 @@ export default function TabTwoScreen() {
     updatedSelectedTags: Set<String>,
     listOfAllDishes: Dish[]
   ) {
+    console.log("set dishes!")
     setDishes(
       updatedSelectedTags.size == 0
         ? listOfAllDishes
@@ -317,9 +324,6 @@ export default function TabTwoScreen() {
     }
     return "All dishes";
   };
-  // async function doSomethingWithSavedDishes() {
-  //   dishes = await getSavedDishes();
-  // }
 
   async function saveAllDishes(updatedDishes: Dish[]) {
     try {
@@ -430,6 +434,7 @@ export default function TabTwoScreen() {
           containerStyle={{
             backgroundColor: Colors[colorScheme ?? "light"]["background"],
             width: "100%",
+            marginTop: 20,
           }}
           bottomDivider={true}
           onPress={() => {
@@ -519,7 +524,7 @@ export default function TabTwoScreen() {
       >
         <FlatList
           persistentScrollbar
-          style={{ maxHeight: 300}}
+          style={{ maxHeight: 300 }}
           contentContainerStyle={{ alignItems: "stretch" }}
           data={tags}
           keyExtractor={(item) => item}
@@ -544,42 +549,89 @@ export default function TabTwoScreen() {
         keyExtractor={(item) => item.name}
         renderItem={({ item, index }) => {
           return (
+            // <Card
+            //   containerStyle={{
+            //     backgroundColor: Colors[colorScheme ?? "light"]["background"],
+            //   }}
+            // >
             <ListItem
               containerStyle={{
                 backgroundColor: Colors[colorScheme ?? "light"]["background"],
+                paddingHorizontal: 16,
+                paddingVertical: 12,
               }}
-              bottomDivider={true}
-              topDivider={true}
+              bottomDivider
+              // topDivider
               onPress={() => {
                 setConfirmDish(item);
                 setConfirmVisible(true);
               }}
             >
-              <ListItem.Content
-                style={{
-                  backgroundColor: Colors[colorScheme ?? "light"]["background"],
-                }}
-              >
+              <ListItem.Content>
                 <ListItem.Title
-                  style={{ color: Colors[colorScheme ?? "light"]["text"] }}
+                  style={{
+                    color: Colors[colorScheme ?? "light"]["text"],
+                    fontWeight: "500",
+                    fontSize: 18,
+                  }}
                 >
                   {item.name}
                 </ListItem.Title>
-                {item.tags.length > 0 ? (
-                  <ListItem.Subtitle
-                    style={{ color: Colors[colorScheme ?? "light"]["text"] }}
+                {item.tags.length > 0 && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 5,
+                    }}
                   >
-                    {item.tags.join(", ")}
-                  </ListItem.Subtitle>
-                ) : null}
+                    <Icon name="tag" type="material" color="grey" size={16} />
+                    <ListItem.Subtitle
+                      style={{
+                        color: Colors[colorScheme ?? "light"]["text"],
+                        marginLeft: 5,
+                        fontSize: 14,
+                      }}
+                    >
+                      {item.tags.join(", ")}
+                    </ListItem.Subtitle>
+                  </View>
+                )}
+                {item.lastEaten > 0 && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Icon
+                      name="schedule"
+                      type="material"
+                      color="grey"
+                      size={16}
+                    />
+                    <ListItem.Subtitle
+                      style={{
+                        color: Colors[colorScheme ?? "light"]["text"],
+                        marginLeft: 5,
+                        fontSize: 14,
+                      }}
+                    >
+                      Last Eaten: {item.lastEaten} days
+                    </ListItem.Subtitle>
+                  </View>
+                )}
               </ListItem.Content>
               <Icon
                 name="delete"
                 type="material"
                 color="grey"
+                size={24}
                 onPress={() => handleDelete(item)}
               />
             </ListItem>
+
+            // </Card>
           );
         }}
       />
@@ -605,8 +657,9 @@ export default function TabTwoScreen() {
               setConfirmDish(noConfirmDish);
               let updatedDishes = [...allDishes];
               updatedDishes.sort(sortFuction);
-              setAllDishes(updatedDishes);
               setDishes(updatedDishes);
+              setAllDishes(updatedDishes);
+              saveAllDishes(updatedDishes);
             }}
           />
           <Dialog.Button
@@ -618,7 +671,7 @@ export default function TabTwoScreen() {
       <FAB
         placement="right"
         icon={{ name: "add", color: "white" }}
-        color="blue"
+        color="#FFB6C1"
         onPress={() => setVisible(true)}
       />
       {newDishOverlay()}
@@ -718,26 +771,27 @@ export default function TabTwoScreen() {
           showRating={false}
           onFinishRating={(value) => setRating(value)}
           size={30}
-          ratingContainerStyle={{marginTop: 15}}
+          ratingContainerStyle={{ marginTop: 15 }}
         />
         <View style={{ flexDirection: "row", marginTop: 10 }}>
           <Button
             title="Cancel"
             containerStyle={{ flex: 1 }}
-            buttonStyle={{ backgroundColor: "#777" }}
+            buttonStyle={{ backgroundColor: "#FFB6C1" }}
             onPress={() => setVisible(false)}
           />
           <Button
             title="Save"
             containerStyle={{ flex: 1 }}
-            buttonStyle={{ backgroundColor: "#777" }}
+            buttonStyle={{ backgroundColor: "#FFB6C1" }}
             disabled={
               name == "" ||
               dishes.some((value) => value.name.trim() == name.trim()) ||
               eaten == "" ||
               isNaN(Number(eaten))
             }
-            disabledStyle={{ backgroundColor: "#555" }}
+            disabledStyle={{ backgroundColor: "#FFE7ED" }}
+            disabledTitleStyle={{ color: "#D3D3D3" }}
             onPress={() => handleSave()}
           />
         </View>
@@ -752,10 +806,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // title: {
-  //   fontSize: 20,
-  //   fontWeight: "bold",
-  // },
   separator: {
     marginVertical: 30,
     height: 1,

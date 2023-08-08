@@ -13,6 +13,7 @@
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~49.0.5",
+    "expo-calendar": "^11.3.0",
     "expo-linking": "^5.0.2",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",

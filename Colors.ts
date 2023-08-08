@@ -8,7 +8,7 @@ export default {
     tint: tintColorLight,
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorLight,
-    overlay: '#ccc'
+    overlay: '#f7fbfd'
   },
   dark: {
     text: '#fff',
