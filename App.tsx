@@ -288,18 +288,18 @@ export default function TabTwoScreen() {
     // updateFilter(updatedTags, allDishes);
   }
 
-  // function updateFilter(
-  //   updatedSelectedTags: Set<String>,
-  //   listOfAllDishes: Dish[]
-  // ) {
-  //   setDishes(
-  //     updatedSelectedTags.size == 0
-  //       ? listOfAllDishes
-  //       : listOfAllDishes.filter((dish) =>
-  //           dish.tags.some((tag) => updatedSelectedTags.has(tag))
-  //         )
-  //   );
-  // }
+  function updateFilter(
+    updatedSelectedTags: Set<String>,
+    listOfAllDishes: Dish[]
+  ) {
+    setDishes(
+      updatedSelectedTags.size == 0
+        ? listOfAllDishes
+        : listOfAllDishes.filter((dish) =>
+            dish.tags.some((tag) => updatedSelectedTags.has(tag))
+          )
+    );
+  }
 
   function changeTags(i: number) {
     let updatedTags = [...tagsChecked];
