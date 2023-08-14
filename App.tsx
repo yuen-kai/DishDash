@@ -14,12 +14,12 @@ import {
   ListItem,
   Card,
 } from "@rneui/themed";
-import React from "react";
+import React, { useCallback, memo } from "react";
 import { FlatList, useColorScheme } from "react-native";
 import Colors from "./Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
-import * as Calendar from 'expo-calendar';
+import * as Calendar from "expo-calendar";
 
 export default function TabTwoScreen() {
   // const colorScheme = useColorScheme();
@@ -63,22 +63,21 @@ export default function TabTwoScreen() {
 
   type TagsListProps = {
     index: number;
-    onPress: () => void;
+    onPress: string;
     background: string;
     checkedFunction: boolean;
     item: string;
   };
 
   const TagsList = (props: TagsListProps) => {
-    const index = props.index;
-    const onPress = props.onPress;
-    const background = props.background;
-    const checkedFunction = props.checkedFunction;
-    const item = props.item;
+    const { index, onPress, background, checkedFunction, item } = props;
+
     return (
       <ListItem
         key={index}
-        onPress={onPress}
+        onPress={() => {
+          onPress == "main" ? changeFilter(item) : changeTags(index);
+        }}
         disabled={index == tags.length - 1}
         bottomDivider
         containerStyle={[
@@ -95,7 +94,9 @@ export default function TabTwoScreen() {
           uncheckedIcon="checkbox-blank-outline"
           checked={checkedFunction}
           disabled={index == tags.length - 1}
-          onPress={onPress}
+          onPress={() => {
+            onPress == "main" ? changeFilter(item) : changeTags(index);
+          }}
           containerStyle={{
             backgroundColor: Colors[colorScheme ?? "light"][background],
           }}
@@ -195,37 +196,39 @@ export default function TabTwoScreen() {
       const calendars = await Calendar.getCalendarsAsync(
         Calendar.EntityTypes.EVENT
       );
-      let date = new Date(2023, 7, 16)
-      const calendarIds = calendars.map((calendar) => calendar.id)
+      let date = new Date(2023, 7, 16);
+      const calendarIds = calendars.map((calendar) => calendar.id);
       let events = await Calendar.getEventsAsync(
         calendarIds,
-        new Date(new Date().setDate(new Date().getDate()-1)),
-        new Date(new Date().setDate(new Date().getDate()+1))
-      )
-      return events.some((event) => event.title.includes("初一")) || events.some((event) => event.title.includes("十五"));
+        new Date(new Date().setDate(new Date().getDate() - 1)),
+        new Date(new Date().setDate(new Date().getDate() + 1))
+      );
+      return (
+        events.some((event) => event.title.includes("初一")) ||
+        events.some((event) => event.title.includes("十五"))
+      );
     }
   }
 
   async function setupDateSpecificTags(savedDishes: Dish[]) {
     let dateSpecificTagsList = new Set<String>();
 
-    if (new Date().getMonth() === 3 && new Date().getDate() === 1) {
-      setDishes([
-        {
-          name: "好吃的东西",
-          tags: [],
-          lastEaten: -1,
-          rating: -1,
-          recipe: "",
-        },
-      ]);
-      return;
-    }
+    // if (new Date().getMonth() === 3 && new Date().getDate() === 1) {
+    //   setDishes([
+    //     {
+    //       name: "好吃的东西",
+    //       tags: [],
+    //       lastEaten: -1,
+    //       rating: -1,
+    //       recipe: "",
+    //     },
+    //   ]);
+    //   return;
+    // }
 
-    if(await checkVegetarian()){
+    if (await checkVegetarian()) {
       dateSpecificTagsList.add("Vegetarian");
-    }
-    else if (new Date().getDay() == 0) {
+    } else if (new Date().getDay() == 0) {
       dateSpecificTagsList.add("Weekend");
     } else if (new Date().getDay() < 5) {
       dateSpecificTagsList.add("Weekday");
@@ -234,7 +237,7 @@ export default function TabTwoScreen() {
     }
 
     setSelectedTags(dateSpecificTagsList);
-    updateFilter(dateSpecificTagsList, savedDishes);
+    // updateFilter(dateSpecificTagsList, savedDishes);
   }
 
   async function getDishes() {
@@ -282,7 +285,7 @@ export default function TabTwoScreen() {
       updatedTags.add(l);
     }
     setSelectedTags(updatedTags);
-    updateFilter(updatedTags, allDishes);
+    // updateFilter(updatedTags, allDishes);
   }
 
   function updateFilter(
@@ -348,13 +351,6 @@ export default function TabTwoScreen() {
     });
     updatedDishes.sort(sortFuction);
     setAllDishes(updatedDishes);
-    setDishes(
-      selectedTags.size == 0
-        ? updatedDishes
-        : updatedDishes.filter((dish) =>
-            dish.tags.some((tag) => selectedTags.has(tag))
-          )
-    );
     saveAllDishes(updatedDishes);
     setVisible(false);
     setName("");
@@ -372,13 +368,6 @@ export default function TabTwoScreen() {
 
   function saveDishes(updatedDishes: Dish[]) {
     setAllDishes(updatedDishes);
-    setDishes(
-      selectedTags.size == 0
-        ? updatedDishes
-        : updatedDishes.filter((dish) =>
-            dish.tags.some((tag) => selectedTags.has(tag))
-          )
-    );
     saveAllDishes(updatedDishes);
   }
 
@@ -418,6 +407,97 @@ export default function TabTwoScreen() {
     } catch (e) {
       // error reading value
     }
+  }
+
+  function includeDish(dish: Dish) {
+    return (
+      selectedTags.size == 0 || dish.tags.some((tag) => selectedTags.has(tag))
+    );
+  }
+
+  type dishItemProps = {
+    item: Dish;
+  };
+
+  function DishItem(props: dishItemProps) {
+    let item = props.item;
+    const include = includeDish(item);
+    if (!include) {
+      return null;
+    }
+    return (
+      <ListItem
+        containerStyle={{
+          backgroundColor: Colors[colorScheme ?? "light"]["background"],
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+        }}
+        bottomDivider
+        // topDivider
+        onPress={() => {
+          setConfirmDish(item);
+          setConfirmVisible(true);
+        }}
+      >
+        <ListItem.Content>
+          <ListItem.Title
+            style={{
+              color: Colors[colorScheme ?? "light"]["text"],
+              fontWeight: "500",
+              fontSize: 18,
+            }}
+          >
+            {item.name}
+          </ListItem.Title>
+          {item.tags.length > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 5,
+              }}
+            >
+              <Icon name="tag" type="material" color="grey" size={16} />
+              <ListItem.Subtitle
+                style={{
+                  color: Colors[colorScheme ?? "light"]["text"],
+                  marginLeft: 5,
+                  fontSize: 14,
+                }}
+              >
+                {item.tags.join(", ")}
+              </ListItem.Subtitle>
+            </View>
+          )}
+          {item.lastEaten > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Icon name="schedule" type="material" color="grey" size={16} />
+              <ListItem.Subtitle
+                style={{
+                  color: Colors[colorScheme ?? "light"]["text"],
+                  marginLeft: 5,
+                  fontSize: 14,
+                }}
+              >
+                Last Eaten: {item.lastEaten} days
+              </ListItem.Subtitle>
+            </View>
+          )}
+        </ListItem.Content>
+        <Icon
+          name="delete"
+          type="material"
+          color="grey"
+          size={24}
+          onPress={() => handleDelete(item)}
+        />
+      </ListItem>
+    );
   }
 
   return (
@@ -530,7 +610,7 @@ export default function TabTwoScreen() {
           renderItem={({ item, index }) => (
             <TagsList
               index={index}
-              onPress={() => changeFilter(item)}
+              onPress="main"
               background="background"
               checkedFunction={selectedTags.has(item)}
               item={item}
@@ -544,95 +624,9 @@ export default function TabTwoScreen() {
           width: "100%",
           backgroundColor: Colors[colorScheme ?? "light"]["background"],
         }}
-        data={dishes}
+        data={allDishes}
         keyExtractor={(item) => item.name}
-        renderItem={({ item, index }) => {
-          return (
-            // <Card
-            //   containerStyle={{
-            //     backgroundColor: Colors[colorScheme ?? "light"]["background"],
-            //   }}
-            // >
-            <ListItem
-              containerStyle={{
-                backgroundColor: Colors[colorScheme ?? "light"]["background"],
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-              }}
-              bottomDivider
-              // topDivider
-              onPress={() => {
-                setConfirmDish(item);
-                setConfirmVisible(true);
-              }}
-            >
-              <ListItem.Content>
-                <ListItem.Title
-                  style={{
-                    color: Colors[colorScheme ?? "light"]["text"],
-                    fontWeight: "500",
-                    fontSize: 18,
-                  }}
-                >
-                  {item.name}
-                </ListItem.Title>
-                {item.tags.length > 0 && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginTop: 5,
-                    }}
-                  >
-                    <Icon name="tag" type="material" color="grey" size={16} />
-                    <ListItem.Subtitle
-                      style={{
-                        color: Colors[colorScheme ?? "light"]["text"],
-                        marginLeft: 5,
-                        fontSize: 14,
-                      }}
-                    >
-                      {item.tags.join(", ")}
-                    </ListItem.Subtitle>
-                  </View>
-                )}
-                {item.lastEaten > 0 && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Icon
-                      name="schedule"
-                      type="material"
-                      color="grey"
-                      size={16}
-                    />
-                    <ListItem.Subtitle
-                      style={{
-                        color: Colors[colorScheme ?? "light"]["text"],
-                        marginLeft: 5,
-                        fontSize: 14,
-                      }}
-                    >
-                      Last Eaten: {item.lastEaten} days
-                    </ListItem.Subtitle>
-                  </View>
-                )}
-              </ListItem.Content>
-              <Icon
-                name="delete"
-                type="material"
-                color="grey"
-                size={24}
-                onPress={() => handleDelete(item)}
-              />
-            </ListItem>
-
-            // </Card>
-          );
-        }}
+        renderItem={({ item, index }) => <DishItem item={item} />}
       />
       <Dialog
         isVisible={confirmVisible}
@@ -656,7 +650,6 @@ export default function TabTwoScreen() {
               setConfirmDish(noConfirmDish);
               let updatedDishes = [...allDishes];
               updatedDishes.sort(sortFuction);
-              setDishes(updatedDishes);
               setAllDishes(updatedDishes);
               saveAllDishes(updatedDishes);
             }}
@@ -695,7 +688,7 @@ export default function TabTwoScreen() {
           value={name}
           renderErrorMessage={false}
           errorMessage={
-            dishes.some((value) => value.name.trim() == name.trim())
+            allDishes.some((value) => value.name.trim() == name.trim())
               ? "Name already used!"
               : ""
           }
@@ -757,7 +750,7 @@ export default function TabTwoScreen() {
             renderItem={({ item, index }) => (
               <TagsList
                 index={index}
-                onPress={() => changeTags(index)}
+                onPress="newDish"
                 background="overlay"
                 checkedFunction={tagsChecked[index]}
                 item={item}
@@ -785,7 +778,7 @@ export default function TabTwoScreen() {
             buttonStyle={{ backgroundColor: "#FFB6C1" }}
             disabled={
               name == "" ||
-              dishes.some((value) => value.name.trim() == name.trim()) ||
+              allDishes.some((value) => value.name.trim() == name.trim()) ||
               eaten == "" ||
               isNaN(Number(eaten))
             }
