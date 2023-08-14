@@ -289,7 +289,6 @@ export default function TabTwoScreen() {
     updatedSelectedTags: Set<String>,
     listOfAllDishes: Dish[]
   ) {
-    console.log("set dishes!")
     setDishes(
       updatedSelectedTags.size == 0
         ? listOfAllDishes
