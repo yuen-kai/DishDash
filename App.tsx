@@ -14,7 +14,7 @@ import {
   ListItem,
   Card,
 } from "@rneui/themed";
-import React, { useCallback } from "react";
+import React, { useCallback, memo } from "react";
 import { FlatList, useColorScheme } from "react-native";
 import Colors from "./Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -70,11 +70,14 @@ export default function TabTwoScreen() {
   };
 
   const TagsList = (props: TagsListProps) => {
-    const {index, onPress, background, checkedFunction, item} = props
+    const { index, onPress, background, checkedFunction, item } = props;
+
     return (
       <ListItem
         key={index}
-        onPress={()=>{onPress=="main"?changeFilter(item):changeTags(index)}}
+        onPress={() => {
+          onPress == "main" ? changeFilter(item) : changeTags(index);
+        }}
         disabled={index == tags.length - 1}
         bottomDivider
         containerStyle={[
@@ -91,7 +94,9 @@ export default function TabTwoScreen() {
           uncheckedIcon="checkbox-blank-outline"
           checked={checkedFunction}
           disabled={index == tags.length - 1}
-          onPress={()=>{onPress=="main"?changeFilter(item):changeTags(index)}}
+          onPress={() => {
+            onPress == "main" ? changeFilter(item) : changeTags(index);
+          }}
           containerStyle={{
             backgroundColor: Colors[colorScheme ?? "light"][background],
           }}
@@ -273,7 +278,6 @@ export default function TabTwoScreen() {
   }
 
   function changeFilter(l: String) {
-    console.log("changeFilter")
     const updatedTags = new Set(selectedTags);
     if (selectedTags.has(l)) {
       updatedTags.delete(l);
@@ -405,101 +409,95 @@ export default function TabTwoScreen() {
     }
   }
 
+  function includeDish(dish: Dish) {
+    return (
+      selectedTags.size == 0 || dish.tags.some((tag) => selectedTags.has(tag))
+    );
+  }
+
   type dishItemProps = {
     item: Dish;
   };
 
   function DishItem(props: dishItemProps) {
     let item = props.item;
-    const include =
-      selectedTags.size == 0 || item.tags.some((tag) => selectedTags.has(tag));
-    const something = useCallback(
-      (include:boolean) => {
-        if (!include) {
-          return null;
-        }
-        return (
-          <ListItem
-            containerStyle={{
-              backgroundColor: Colors[colorScheme ?? "light"]["background"],
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-            }}
-            bottomDivider
-            // topDivider
-            onPress={() => {
-              setConfirmDish(item);
-              setConfirmVisible(true);
+    const include = includeDish(item);
+    if (!include) {
+      return null;
+    }
+    return (
+      <ListItem
+        containerStyle={{
+          backgroundColor: Colors[colorScheme ?? "light"]["background"],
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+        }}
+        bottomDivider
+        // topDivider
+        onPress={() => {
+          setConfirmDish(item);
+          setConfirmVisible(true);
+        }}
+      >
+        <ListItem.Content>
+          <ListItem.Title
+            style={{
+              color: Colors[colorScheme ?? "light"]["text"],
+              fontWeight: "500",
+              fontSize: 18,
             }}
           >
-            <ListItem.Content>
-              <ListItem.Title
+            {item.name}
+          </ListItem.Title>
+          {item.tags.length > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 5,
+              }}
+            >
+              <Icon name="tag" type="material" color="grey" size={16} />
+              <ListItem.Subtitle
                 style={{
                   color: Colors[colorScheme ?? "light"]["text"],
-                  fontWeight: "500",
-                  fontSize: 18,
+                  marginLeft: 5,
+                  fontSize: 14,
                 }}
               >
-                {item.name}
-              </ListItem.Title>
-              {item.tags.length > 0 && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginTop: 5,
-                  }}
-                >
-                  <Icon name="tag" type="material" color="grey" size={16} />
-                  <ListItem.Subtitle
-                    style={{
-                      color: Colors[colorScheme ?? "light"]["text"],
-                      marginLeft: 5,
-                      fontSize: 14,
-                    }}
-                  >
-                    {item.tags.join(", ")}
-                  </ListItem.Subtitle>
-                </View>
-              )}
-              {item.lastEaten > 0 && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <Icon
-                    name="schedule"
-                    type="material"
-                    color="grey"
-                    size={16}
-                  />
-                  <ListItem.Subtitle
-                    style={{
-                      color: Colors[colorScheme ?? "light"]["text"],
-                      marginLeft: 5,
-                      fontSize: 14,
-                    }}
-                  >
-                    Last Eaten: {item.lastEaten} days
-                  </ListItem.Subtitle>
-                </View>
-              )}
-            </ListItem.Content>
-            <Icon
-              name="delete"
-              type="material"
-              color="grey"
-              size={24}
-              onPress={() => handleDelete(item)}
-            />
-          </ListItem>
-        );
-      },
-      [include]
+                {item.tags.join(", ")}
+              </ListItem.Subtitle>
+            </View>
+          )}
+          {item.lastEaten > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Icon name="schedule" type="material" color="grey" size={16} />
+              <ListItem.Subtitle
+                style={{
+                  color: Colors[colorScheme ?? "light"]["text"],
+                  marginLeft: 5,
+                  fontSize: 14,
+                }}
+              >
+                Last Eaten: {item.lastEaten} days
+              </ListItem.Subtitle>
+            </View>
+          )}
+        </ListItem.Content>
+        <Icon
+          name="delete"
+          type="material"
+          color="grey"
+          size={24}
+          onPress={() => handleDelete(item)}
+        />
+      </ListItem>
     );
-    return something(include);
   }
 
   return (
@@ -690,7 +688,7 @@ export default function TabTwoScreen() {
           value={name}
           renderErrorMessage={false}
           errorMessage={
-            dishes.some((value) => value.name.trim() == name.trim())
+            allDishes.some((value) => value.name.trim() == name.trim())
               ? "Name already used!"
               : ""
           }
@@ -780,7 +778,7 @@ export default function TabTwoScreen() {
             buttonStyle={{ backgroundColor: "#FFB6C1" }}
             disabled={
               name == "" ||
-              dishes.some((value) => value.name.trim() == name.trim()) ||
+              allDishes.some((value) => value.name.trim() == name.trim()) ||
               eaten == "" ||
               isNaN(Number(eaten))
             }
