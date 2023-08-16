@@ -36,7 +36,7 @@ export default function TabTwoScreen() {
   const noConfirmDish: Dish = {
     name: "[No dish selected!]",
     tags: [],
-    lastEaten: -1,
+    lastEaten: setLastEaten(0),
     rating: -1,
     recipe: "",
   };
@@ -208,7 +208,7 @@ export default function TabTwoScreen() {
         {
           name: "好吃的东西",
           tags: [],
-          lastEaten: 0,
+          lastEaten: setLastEaten(0),
           rating: 3,
           recipe: "",
         },
@@ -230,6 +230,15 @@ export default function TabTwoScreen() {
     updateFilter(dateSpecificTagsList, savedDishes);
   }
 
+  function setLastEaten(days: number){
+    return new Date(new Date().setDate(new Date().getDate()-days)).setHours(0,0,0,0)
+  }
+
+  function getLastEaten(milliseconds: number){
+    return (new Date().setHours(0,0,0,0) - milliseconds)/(1000*60*60*24)
+  }
+
+
   async function getDishes() {
     try {
       const jsonValue = await AsyncStorage.getItem("allDishes");
@@ -240,21 +249,21 @@ export default function TabTwoScreen() {
               {
                 name: "Pizza",
                 tags: ["Lunch", "Dinner", "Pork"],
-                lastEaten: 1,
+                lastEaten: setLastEaten(3),
                 rating: 3,
                 recipe: "",
               },
               {
                 name: "Burger",
                 tags: ["Chicken", "Lunch", "Weekend"],
-                lastEaten: 1,
+                lastEaten: setLastEaten(1),
                 rating: 3,
                 recipe: "",
               },
               {
                 name: "Pasta",
                 tags: ["Chicken", "Lunch", "Weekend"],
-                lastEaten: 1,
+                lastEaten: setLastEaten(1),
                 rating: 3,
                 recipe: "",
               },
@@ -327,7 +336,7 @@ export default function TabTwoScreen() {
   }
 
   const sortFuction = (a: Dish, b: Dish) => {
-    return b.lastEaten + b.rating - (a.lastEaten + a.rating);
+    return getLastEaten(b.lastEaten) + b.rating - (getLastEaten(a.lastEaten) + a.rating);
   };
 
   function handleSave() {
@@ -335,7 +344,7 @@ export default function TabTwoScreen() {
     updatedDishes.push({
       name: name,
       tags: tags.filter((value, index) => tagsChecked[index]),
-      lastEaten: parseInt(eaten),
+      lastEaten: setLastEaten(parseInt(eaten)),
       rating: rating,
       recipe: recipe,
     });
@@ -597,7 +606,7 @@ export default function TabTwoScreen() {
                       fontSize: 14,
                     }}
                   >
-                    Last Eaten: {item.lastEaten} days
+                    Last Eaten: {getLastEaten(item.lastEaten)} days
                   </ListItem.Subtitle>
                 </View>
               </ListItem.Content>
@@ -628,7 +637,7 @@ export default function TabTwoScreen() {
             title="Yes"
             onPress={() => {
               setCurrentDish(confirmDish);
-              allDishes[allDishes.indexOf(confirmDish)].lastEaten = 0;
+              allDishes[allDishes.indexOf(confirmDish)].lastEaten = setLastEaten(0);
               setConfirmVisible(false);
               setCurrentVisible(true);
               setConfirmDish(noConfirmDish);
