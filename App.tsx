@@ -19,7 +19,7 @@ import { FlatList, useColorScheme } from "react-native";
 import Colors from "./Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
-import * as Calendar from 'expo-calendar';
+import * as Calendar from "expo-calendar";
 
 export default function TabTwoScreen() {
   // const colorScheme = useColorScheme();
@@ -59,22 +59,13 @@ export default function TabTwoScreen() {
   });
   const [dishes, setDishes] = React.useState<Dish[]>(allDishes);
 
-  // getTags();
-
-  type TagsListProps = {
-    index: number;
-    onPress: () => void;
-    background: string;
-    checkedFunction: boolean;
-    item: string;
-  };
-
-  const TagsList = (props: TagsListProps) => {
-    const index = props.index;
-    const onPress = props.onPress;
-    const background = props.background;
-    const checkedFunction = props.checkedFunction;
-    const item = props.item;
+  const TagsList = (
+    index: number,
+    onPress: () => void,
+    background: string,
+    checkedFunction: boolean,
+    item: string
+  ) => {
     return (
       <ListItem
         key={index}
@@ -195,14 +186,17 @@ export default function TabTwoScreen() {
       const calendars = await Calendar.getCalendarsAsync(
         Calendar.EntityTypes.EVENT
       );
-      let date = new Date(2023, 7, 16)
-      const calendarIds = calendars.map((calendar) => calendar.id)
+      let date = new Date(2023, 7, 16);
+      const calendarIds = calendars.map((calendar) => calendar.id);
       let events = await Calendar.getEventsAsync(
         calendarIds,
-        new Date(new Date().setDate(new Date().getDate()-1)),
-        new Date(new Date().setDate(new Date().getDate()+1))
-      )
-      return events.some((event) => event.title.includes("初一")) || events.some((event) => event.title.includes("十五"));
+        new Date(new Date().setDate(new Date().getDate() - 1)),
+        new Date(new Date().setDate(new Date().getDate() + 1))
+      );
+      return (
+        events.some((event) => event.title.includes("初一")) ||
+        events.some((event) => event.title.includes("十五"))
+      );
     }
   }
 
@@ -214,18 +208,17 @@ export default function TabTwoScreen() {
         {
           name: "好吃的东西",
           tags: [],
-          lastEaten: -1,
-          rating: -1,
+          lastEaten: 0,
+          rating: 3,
           recipe: "",
         },
       ]);
       return;
     }
 
-    if(await checkVegetarian()){
+    if (await checkVegetarian()) {
       dateSpecificTagsList.add("Vegetarian");
-    }
-    else if (new Date().getDay() == 0) {
+    } else if (new Date().getDay() == 0) {
       dateSpecificTagsList.add("Weekend");
     } else if (new Date().getDay() < 5) {
       dateSpecificTagsList.add("Weekday");
@@ -436,10 +429,6 @@ export default function TabTwoScreen() {
             marginTop: 20,
           }}
           bottomDivider={true}
-          onPress={() => {
-            setConfirmDish(currentDish);
-            setConfirmVisible(true);
-          }}
         >
           <ListItem.Content
             style={{
@@ -527,15 +516,15 @@ export default function TabTwoScreen() {
           contentContainerStyle={{ alignItems: "stretch" }}
           data={tags}
           keyExtractor={(item) => item}
-          renderItem={({ item, index }) => (
-            <TagsList
-              index={index}
-              onPress={() => changeFilter(item)}
-              background="background"
-              checkedFunction={selectedTags.has(item)}
-              item={item}
-            />
-          )}
+          renderItem={({ item, index }) =>
+            TagsList(
+              index,
+              () => changeFilter(item),
+              "background",
+              selectedTags.has(item),
+              item
+            )
+          }
         />
       </ListItem.Accordion>
 
@@ -548,19 +537,12 @@ export default function TabTwoScreen() {
         keyExtractor={(item) => item.name}
         renderItem={({ item, index }) => {
           return (
-            // <Card
-            //   containerStyle={{
-            //     backgroundColor: Colors[colorScheme ?? "light"]["background"],
-            //   }}
-            // >
             <ListItem
               containerStyle={{
-                backgroundColor: Colors[colorScheme ?? "light"]["background"],
-                paddingHorizontal: 16,
-                paddingVertical: 12,
+                backgroundColor: Colors[colorScheme ?? "light"]["background"]
               }}
               bottomDivider
-              // topDivider
+              topDivider
               onPress={() => {
                 setConfirmDish(item);
                 setConfirmVisible(true);
@@ -596,30 +578,28 @@ export default function TabTwoScreen() {
                     </ListItem.Subtitle>
                   </View>
                 )}
-                {item.lastEaten > 0 && (
-                  <View
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <Icon
+                    name="schedule"
+                    type="material"
+                    color="grey"
+                    size={16}
+                  />
+                  <ListItem.Subtitle
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
+                      color: Colors[colorScheme ?? "light"]["text"],
+                      marginLeft: 5,
+                      fontSize: 14,
                     }}
                   >
-                    <Icon
-                      name="schedule"
-                      type="material"
-                      color="grey"
-                      size={16}
-                    />
-                    <ListItem.Subtitle
-                      style={{
-                        color: Colors[colorScheme ?? "light"]["text"],
-                        marginLeft: 5,
-                        fontSize: 14,
-                      }}
-                    >
-                      Last Eaten: {item.lastEaten} days
-                    </ListItem.Subtitle>
-                  </View>
-                )}
+                    Last Eaten: {item.lastEaten} days
+                  </ListItem.Subtitle>
+                </View>
               </ListItem.Content>
               <Icon
                 name="delete"
@@ -629,8 +609,6 @@ export default function TabTwoScreen() {
                 onPress={() => handleDelete(item)}
               />
             </ListItem>
-
-            // </Card>
           );
         }}
       />
@@ -650,7 +628,7 @@ export default function TabTwoScreen() {
             title="Yes"
             onPress={() => {
               setCurrentDish(confirmDish);
-              dishes[dishes.indexOf(confirmDish)].lastEaten = 0;
+              allDishes[allDishes.indexOf(confirmDish)].lastEaten = 0;
               setConfirmVisible(false);
               setCurrentVisible(true);
               setConfirmDish(noConfirmDish);
@@ -754,15 +732,15 @@ export default function TabTwoScreen() {
             contentContainerStyle={{ alignItems: "stretch" }}
             data={tags}
             keyExtractor={(item) => item}
-            renderItem={({ item, index }) => (
-              <TagsList
-                index={index}
-                onPress={() => changeTags(index)}
-                background="overlay"
-                checkedFunction={tagsChecked[index]}
-                item={item}
-              />
-            )}
+            renderItem={({ item, index }) =>
+              TagsList(
+                index,
+                () => changeTags(index),
+                "overlay",
+                tagsChecked[index],
+                item
+              )
+            }
           />
         </ListItem.Accordion>
 
