@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "DishDash2",
+    "name": "Fortune Foodie",
     "slug": "DishDash2",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -19,12 +19,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon-remove-bg.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yuenkai.DishDash2"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fd75eeae-ff04-4197-ba37-12d79d7aad2d"
+      }
     }
   }
 }
