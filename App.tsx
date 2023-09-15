@@ -24,15 +24,6 @@ import * as Calendar from "expo-calendar";
 export default function TabTwoScreen() {
   // const colorScheme = useColorScheme();
   const colorScheme = "light"; //Mom's preferred color scheme
-  const [visible, setVisible] = React.useState(false);
-  const [name, setName] = React.useState("");
-  const [eaten, setEaten] = React.useState("");
-  const [rating, setRating] = React.useState(3);
-  const [recipe, setRecipe] = React.useState("");
-  const [expanded, setExpanded] = React.useState(false);
-  const [expandedNew, setExpandedNew] = React.useState(false);
-  const [newTag, setNewTag] = React.useState("");
-  const [confirmVisible, setConfirmVisible] = React.useState(false);
   const noConfirmDish: Dish = {
     name: "[No dish selected!]",
     tags: [],
@@ -40,6 +31,16 @@ export default function TabTwoScreen() {
     rating: -1,
     recipe: "",
   };
+  const [visible, setVisible] = React.useState(false);
+  const [name, setName] = React.useState("");
+  const [eaten, setEaten] = React.useState("");
+  const [rating, setRating] = React.useState(3);
+  const [recipe, setRecipe] = React.useState("");
+  const [editDish, setEditDish] = React.useState(noConfirmDish);
+  const [expanded, setExpanded] = React.useState(false);
+  const [expandedNew, setExpandedNew] = React.useState(false);
+  const [newTag, setNewTag] = React.useState("");
+  const [confirmVisible, setConfirmVisible] = React.useState(false);
   const [confirmDish, setConfirmDish] = React.useState<Dish>(noConfirmDish);
   const [currentDish, setCurrentDish] = React.useState(noConfirmDish);
   const [currentVisible, setCurrentVisible] = React.useState(false);
@@ -48,7 +49,7 @@ export default function TabTwoScreen() {
     getTags(); // Call the function when the component mounts
     return [""]; // Initial state value
   });
-  const [selectedTags, setSelectedTags] = React.useState<Set<String>>(
+  const [selectedTags, setSelectedTags] = React.useState<Set<string>>(
     new Set()
   );
   const [tagsChecked, setTagsChecked] = React.useState<boolean[]>([]);
@@ -199,7 +200,7 @@ export default function TabTwoScreen() {
   }
 
   async function setupDateSpecificTags(savedDishes: Dish[]) {
-    let dateSpecificTagsList = new Set<String>();
+    let dateSpecificTagsList = new Set<string>();
 
     if (new Date().getMonth() === 3 && new Date().getDate() === 1) {
       setDishes([
@@ -214,7 +215,7 @@ export default function TabTwoScreen() {
       return;
     }
 
-    dateSpecificTagsList.add("Include papa")
+    dateSpecificTagsList.add("Include papa");
     if (await checkVegetarian()) {
       dateSpecificTagsList.add("Vegetarian");
     } else if (new Date().getDay() == 0) {
@@ -475,7 +476,7 @@ export default function TabTwoScreen() {
     }
   }
 
-  function changeFilter(l: String) {
+  function changeFilter(l: string) {
     const updatedTags = new Set(selectedTags);
     if (selectedTags.has(l)) {
       updatedTags.delete(l);
@@ -487,15 +488,20 @@ export default function TabTwoScreen() {
   }
 
   function updateFilter(
-    updatedSelectedTags: Set<String>,
+    updatedSelectedTags: Set<string>,
     listOfAllDishes: Dish[]
   ) {
     setDishes(
       updatedSelectedTags.size == 0
         ? listOfAllDishes
-        : listOfAllDishes.filter((dish) =>
-            dish.tags.some((tag) => updatedSelectedTags.has(tag))
-          )
+        : listOfAllDishes.filter((dish) => {
+            for (const tag of updatedSelectedTags) {
+              if (!dish.tags.includes(tag)) {
+                return false;
+              }
+            }
+            return true;
+          })
     );
   }
 
@@ -553,13 +559,7 @@ export default function TabTwoScreen() {
     });
     updatedDishes.sort(sortFuction);
     setAllDishes(updatedDishes);
-    setDishes(
-      selectedTags.size == 0
-        ? updatedDishes
-        : updatedDishes.filter((dish) =>
-            dish.tags.some((tag) => selectedTags.has(tag))
-          )
-    );
+    updateFilter(selectedTags, updatedDishes);
     saveAllDishes(updatedDishes);
     setVisible(false);
     setName("");
@@ -567,6 +567,33 @@ export default function TabTwoScreen() {
     setEaten("");
     setRating(3);
     setRecipe("");
+  }
+
+  function handleEdit() {
+    let updatedDishes = [...allDishes];
+    if (allDishes.indexOf(editDish) != -1) {
+      updatedDishes.splice(allDishes.indexOf(editDish), 1, {
+        name: name,
+        tags: tags.filter((value, index) => tagsChecked[index]),
+        lastEaten: setLastEaten(parseInt(eaten)),
+        rating: rating,
+        recipe: recipe,
+      });
+    } else {
+      console.warn("Couldn't find edit dish!");
+    }
+
+    updatedDishes.sort(sortFuction);
+    setAllDishes(updatedDishes);
+    updateFilter(selectedTags, updatedDishes);
+    saveAllDishes(updatedDishes);
+    setVisible(false);
+    setName("");
+    setTagsChecked(tagsChecked.fill(false));
+    setEaten("");
+    setRating(3);
+    setRecipe("");
+    setEditDish(noConfirmDish)
   }
 
   function handleDelete(dish: Dish) {
@@ -577,13 +604,7 @@ export default function TabTwoScreen() {
 
   function saveDishes(updatedDishes: Dish[]) {
     setAllDishes(updatedDishes);
-    setDishes(
-      selectedTags.size == 0
-        ? updatedDishes
-        : updatedDishes.filter((dish) =>
-            dish.tags.some((tag) => selectedTags.has(tag))
-          )
-    );
+    updateFilter(selectedTags, updatedDishes);
     saveAllDishes(updatedDishes);
   }
 
@@ -814,6 +835,27 @@ export default function TabTwoScreen() {
                 </View>
               </ListItem.Content>
               <Icon
+                name="edit"
+                type="material"
+                color="grey"
+                size={24}
+                onPress={() => {
+                  setName(item.name);
+                  setEaten(getLastEaten(item.lastEaten).toString());
+                  setRating(item.rating);
+                  setRecipe(item.recipe);
+                  let tempTagsChecked = new Array(tags.length).fill(false);
+                  for(let i = 0; i < tags.length; i++){
+                    if(item.tags.includes(tags[i])){
+                      tempTagsChecked[i] = true;
+                    }
+                  };
+                  setTagsChecked(tempTagsChecked)
+                  setEditDish(item);
+                  setVisible(true);
+                }}
+              />
+              <Icon
                 name="delete"
                 type="material"
                 color="grey"
@@ -859,7 +901,7 @@ export default function TabTwoScreen() {
         </Dialog.Actions>
       </Dialog>
       <FAB
-        placement="right"
+        style={{ alignSelf: "flex-end", marginBottom: 30, marginRight: 20 }}
         icon={{ name: "add", color: "white" }}
         color="#FFB6C1"
         onPress={() => setVisible(true)}
@@ -878,7 +920,9 @@ export default function TabTwoScreen() {
           backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
         }}
       >
-        <Text title={true}>New Dish</Text>
+        <Text title={true}>
+          {editDish.name != noConfirmDish.name ? "Edit Dish" : "New Dish"}
+        </Text>
         <Input
           placeholder="Add name"
           onChangeText={(value) => setName(value)}
@@ -886,7 +930,11 @@ export default function TabTwoScreen() {
           value={name}
           renderErrorMessage={false}
           errorMessage={
-            dishes.some((value) => value.name.trim() == name.trim())
+            dishes.some(
+              (value) =>
+                value.name.trim() != editDish.name &&
+                value.name.trim() == name.trim()
+            )
               ? "Name already used!"
               : ""
           }
@@ -959,6 +1007,7 @@ export default function TabTwoScreen() {
 
         <AirbnbRating
           showRating={false}
+          defaultRating={rating}
           onFinishRating={(value) => setRating(value)}
           size={30}
           ratingContainerStyle={{ marginTop: 15 }}
@@ -976,13 +1025,19 @@ export default function TabTwoScreen() {
             buttonStyle={{ backgroundColor: "#FFB6C1" }}
             disabled={
               name == "" ||
-              dishes.some((value) => value.name.trim() == name.trim()) ||
+              dishes.some(
+                (value) =>
+                  value.name.trim() != editDish.name &&
+                  value.name.trim() == name.trim()
+              ) ||
               eaten == "" ||
               isNaN(Number(eaten))
             }
             disabledStyle={{ backgroundColor: "#FFE7ED" }}
             disabledTitleStyle={{ color: "#D3D3D3" }}
-            onPress={() => handleSave()}
+            onPress={() => {
+              editDish.name != noConfirmDish.name ? handleEdit() : handleSave();
+            }}
           />
         </View>
       </Overlay>
