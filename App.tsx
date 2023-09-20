@@ -549,7 +549,22 @@ export default function TabTwoScreen() {
   };
 
   function handleSave() {
+    //Double check disabled state
+    if(name == "" ||
+    dishes.some(
+      (value) =>
+        value.name.trim() != editDish.name &&
+        value.name.trim() == name.trim()
+    ) ||
+    eaten == "" ||
+    isNaN(Number(eaten))){
+      return
+    }
+    
     let updatedDishes = [...allDishes];
+    if (editDish.name != noConfirmDish.name && allDishes.indexOf(editDish) != -1) {
+      updatedDishes.splice(allDishes.indexOf(editDish), 1)
+    }
     updatedDishes.push({
       name: name,
       tags: tags.filter((value, index) => tagsChecked[index]),
@@ -561,32 +576,10 @@ export default function TabTwoScreen() {
     setAllDishes(updatedDishes);
     updateFilter(selectedTags, updatedDishes);
     saveAllDishes(updatedDishes);
-    setVisible(false);
-    setName("");
-    setTagsChecked(tagsChecked.fill(false));
-    setEaten("");
-    setRating(3);
-    setRecipe("");
+    resetAddDish();
   }
-
-  function handleEdit() {
-    let updatedDishes = [...allDishes];
-    if (allDishes.indexOf(editDish) != -1) {
-      updatedDishes.splice(allDishes.indexOf(editDish), 1, {
-        name: name,
-        tags: tags.filter((value, index) => tagsChecked[index]),
-        lastEaten: setLastEaten(parseInt(eaten)),
-        rating: rating,
-        recipe: recipe,
-      });
-    } else {
-      console.warn("Couldn't find edit dish!");
-    }
-
-    updatedDishes.sort(sortFuction);
-    setAllDishes(updatedDishes);
-    updateFilter(selectedTags, updatedDishes);
-    saveAllDishes(updatedDishes);
+  
+  function resetAddDish(){
     setVisible(false);
     setName("");
     setTagsChecked(tagsChecked.fill(false));
@@ -889,7 +882,7 @@ export default function TabTwoScreen() {
               setConfirmDish(noConfirmDish);
               let updatedDishes = [...allDishes];
               updatedDishes.sort(sortFuction);
-              setDishes(updatedDishes);
+              updateFilter(selectedTags, updatedDishes);
               setAllDishes(updatedDishes);
               saveAllDishes(updatedDishes);
             }}
@@ -914,7 +907,7 @@ export default function TabTwoScreen() {
     return (
       <Overlay
         isVisible={visible}
-        onBackdropPress={() => setVisible(false)}
+        onBackdropPress={() => resetAddDish()}
         overlayStyle={{
           width: "80%",
           backgroundColor: Colors[colorScheme ?? "light"]["overlay"],
@@ -1017,7 +1010,7 @@ export default function TabTwoScreen() {
             title="Cancel"
             containerStyle={{ flex: 1 }}
             buttonStyle={{ backgroundColor: "#FFB6C1" }}
-            onPress={() => setVisible(false)}
+            onPress={() => resetAddDish()}
           />
           <Button
             title="Save"
@@ -1035,9 +1028,7 @@ export default function TabTwoScreen() {
             }
             disabledStyle={{ backgroundColor: "#FFE7ED" }}
             disabledTitleStyle={{ color: "#D3D3D3" }}
-            onPress={() => {
-              editDish.name != noConfirmDish.name ? handleEdit() : handleSave();
-            }}
+            onPress={() =>  handleSave()}
           />
         </View>
       </Overlay>
