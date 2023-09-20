@@ -550,20 +550,24 @@ export default function TabTwoScreen() {
 
   function handleSave() {
     //Double check disabled state
-    if(name == "" ||
-    dishes.some(
-      (value) =>
-        value.name.trim() != editDish.name &&
-        value.name.trim() == name.trim()
-    ) ||
-    eaten == "" ||
-    isNaN(Number(eaten))){
-      return
+    if (
+      name == "" ||
+      dishes.some(
+        (value) =>
+          value.name.trim() != editDish.name && value.name.trim() == name.trim()
+      ) ||
+      eaten == "" ||
+      isNaN(Number(eaten))
+    ) {
+      return;
     }
-    
+
     let updatedDishes = [...allDishes];
-    if (editDish.name != noConfirmDish.name && allDishes.indexOf(editDish) != -1) {
-      updatedDishes.splice(allDishes.indexOf(editDish), 1)
+    if (
+      editDish.name != noConfirmDish.name &&
+      allDishes.indexOf(editDish) != -1
+    ) {
+      updatedDishes.splice(allDishes.indexOf(editDish), 1);
     }
     updatedDishes.push({
       name: name,
@@ -578,15 +582,15 @@ export default function TabTwoScreen() {
     saveAllDishes(updatedDishes);
     resetAddDish();
   }
-  
-  function resetAddDish(){
+
+  function resetAddDish() {
     setVisible(false);
     setName("");
     setTagsChecked(tagsChecked.fill(false));
     setEaten("");
     setRating(3);
     setRecipe("");
-    setEditDish(noConfirmDish)
+    setEditDish(noConfirmDish);
   }
 
   function handleDelete(dish: Dish) {
@@ -838,12 +842,12 @@ export default function TabTwoScreen() {
                   setRating(item.rating);
                   setRecipe(item.recipe);
                   let tempTagsChecked = new Array(tags.length).fill(false);
-                  for(let i = 0; i < tags.length; i++){
-                    if(item.tags.includes(tags[i])){
+                  for (let i = 0; i < tags.length; i++) {
+                    if (item.tags.includes(tags[i])) {
                       tempTagsChecked[i] = true;
                     }
-                  };
-                  setTagsChecked(tempTagsChecked)
+                  }
+                  setTagsChecked(tempTagsChecked);
                   setEditDish(item);
                   setVisible(true);
                 }}
@@ -1028,7 +1032,7 @@ export default function TabTwoScreen() {
             }
             disabledStyle={{ backgroundColor: "#FFE7ED" }}
             disabledTitleStyle={{ color: "#D3D3D3" }}
-            onPress={() =>  handleSave()}
+            onPress={() => handleSave()}
           />
         </View>
       </Overlay>
