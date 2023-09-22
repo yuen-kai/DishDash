@@ -44,6 +44,7 @@ export default function TabTwoScreen() {
   const [confirmDish, setConfirmDish] = React.useState<Dish>(noConfirmDish);
   const [currentDish, setCurrentDish] = React.useState(noConfirmDish);
   const [currentVisible, setCurrentVisible] = React.useState(false);
+  const [undoLastEaten, setUndoLastEaten] = React.useState(0)
   // const [checked, setChecked] = React.useState([]);
   const [tags, setTags] = React.useState(() => {
     getTags(); // Call the function when the component mounts
@@ -709,6 +710,36 @@ export default function TabTwoScreen() {
                 </Text>
               </TouchableOpacity>
             ) : null}
+            <TouchableOpacity
+              onPress={() => {
+                let updatedDishes = [...allDishes];
+                updatedDishes[
+                  updatedDishes.findIndex(
+                    (dish) => dish.name == currentDish.name
+                  )
+                ].lastEaten = undoLastEaten;
+
+                setCurrentVisible(false);
+
+                updatedDishes.sort(sortFuction);
+                updateFilter(selectedTags, updatedDishes);
+                setAllDishes(updatedDishes);
+                saveAllDishes(updatedDishes);
+                setUndoLastEaten(0);
+              }}
+              style={{
+                alignSelf: "center",
+              }}
+            >
+              <Text
+                style={{
+                  textDecorationLine: "underline",
+                  fontSize: 15,
+                }}
+              >
+                Undo
+              </Text>
+            </TouchableOpacity>
           </ListItem.Content>
         </ListItem>
       ) : null}
@@ -879,6 +910,7 @@ export default function TabTwoScreen() {
             title="Yes"
             onPress={() => {
               setCurrentDish(confirmDish);
+              setUndoLastEaten(allDishes[allDishes.indexOf(confirmDish)].lastEaten);
               allDishes[allDishes.indexOf(confirmDish)].lastEaten =
                 setLastEaten(0);
               setConfirmVisible(false);
