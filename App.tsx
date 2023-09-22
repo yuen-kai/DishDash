@@ -44,7 +44,9 @@ export default function TabTwoScreen() {
   const [confirmDish, setConfirmDish] = React.useState<Dish>(noConfirmDish);
   const [currentDish, setCurrentDish] = React.useState(noConfirmDish);
   const [currentVisible, setCurrentVisible] = React.useState(false);
-  const [undoLastEaten, setUndoLastEaten] = React.useState(0)
+  const [undoLastEaten, setUndoLastEaten] = React.useState(0);
+  const [editTag, setEditTag] = React.useState("");
+  const [newEditTag, setNewEditTag] = React.useState("");
   // const [checked, setChecked] = React.useState([]);
   const [tags, setTags] = React.useState(() => {
     getTags(); // Call the function when the component mounts
@@ -116,6 +118,30 @@ export default function TabTwoScreen() {
               containerStyle={{ marginTop: 10 }}
               onSubmitEditing={() => addTag()}
             />
+          ) : editTag == item ? (
+            <Input
+              placeholder={editTag}
+              onChangeText={(value) => setNewEditTag(value)}
+              inputStyle={{
+                color: Colors[colorScheme ?? "light"]["text"],
+              }}
+              value={newEditTag}
+              renderErrorMessage={false}
+              errorMessage={
+                tags
+                  .slice(0, -1)
+                  .some(
+                    (value) =>
+                      value.trim() != editTag.trim() &&
+                      value.trim() == newEditTag.trim()
+                  )
+                  ? "Name already used!"
+                  : ""
+              }
+              errorStyle={{ fontSize: 15 }}
+              containerStyle={{ marginTop: 10 }}
+              onSubmitEditing={() => handleEditTag()}
+            />
           ) : (
             <ListItem.Title
               style={{
@@ -127,6 +153,28 @@ export default function TabTwoScreen() {
           )}
         </ListItem.Content>
         {index != tags.length - 1 ? (
+          editTag != item ? (
+            <Icon
+              name="edit"
+              type="material"
+              color="grey"
+              onPress={() => {
+                setEditTag(item);
+                setNewEditTag(item);
+              }}
+            />
+          ) : (
+            <Icon
+              name="check"
+              type="material"
+              color={editTagDisabled() ? "grey" : "green"}
+              onPress={() => handleEditTag()}
+              disabled={editTagDisabled()}
+              disabledStyle={{ backgroundColor: "rgba(0,0,0,0)" }}
+            />
+          )
+        ) : null}
+        {index != tags.length - 1 ? (
           <Icon
             name="delete"
             type="material"
@@ -137,23 +185,34 @@ export default function TabTwoScreen() {
           <Icon
             name="check"
             type="material"
-            color={
-              newTag == "" ||
-              tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
-                ? "grey"
-                : "green"
-            }
+            color={newTagDisabled() ? "grey" : "green"}
             onPress={() => addTag()}
-            disabled={
-              newTag == "" ||
-              tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
-            }
+            disabled={newTagDisabled()}
             disabledStyle={{ backgroundColor: "rgba(0,0,0,0)" }}
           />
         )}
       </ListItem>
     );
   };
+
+  function newTagDisabled() {
+    return (
+      newTag == "" ||
+      tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
+    );
+  }
+
+  function editTagDisabled() {
+    return (
+      newEditTag == "" ||
+      tags
+        .slice(0, -1)
+        .some(
+          (value) =>
+            value.trim() != editTag.trim() && value.trim() == newEditTag.trim()
+        )
+    );
+  }
 
   async function getTags() {
     try {
@@ -504,6 +563,7 @@ export default function TabTwoScreen() {
             return true;
           })
     );
+    console.log(updatedSelectedTags);
   }
 
   function changeTags(i: number) {
@@ -577,10 +637,7 @@ export default function TabTwoScreen() {
       rating: rating,
       recipe: recipe,
     });
-    updatedDishes.sort(sortFuction);
-    setAllDishes(updatedDishes);
-    updateFilter(selectedTags, updatedDishes);
-    saveAllDishes(updatedDishes);
+    saveDishes(updatedDishes);
     resetAddDish();
   }
 
@@ -622,10 +679,7 @@ export default function TabTwoScreen() {
   }
 
   function addTag() {
-    if (
-      newTag == "" ||
-      tags.slice(0, -1).some((value) => value.trim() == newTag.trim())
-    ) {
+    if (newTagDisabled()) {
       return;
     }
     let updatedTags = [...tags];
@@ -633,6 +687,32 @@ export default function TabTwoScreen() {
     setTags(updatedTags);
     saveTags(updatedTags);
     setNewTag("");
+  }
+
+  function handleEditTag() {
+    if (editTagDisabled()) {
+      return;
+    }
+    let updatedTags = [...tags];
+    updatedTags.splice(tags.indexOf(editTag), 1, newEditTag);
+    let updatedDishes = [...allDishes];
+    for (let i = 0; i < updatedDishes.length; i++) {
+      let index = updatedDishes[i].tags.indexOf(editTag);
+      if (index > -1) {
+        updatedDishes[i].tags.splice(index, 1, newEditTag);
+      }
+    }
+    if (selectedTags.has(editTag)) {
+      let updatedSelectedTags = selectedTags;
+      updatedSelectedTags.delete(editTag);
+      updatedSelectedTags.add(newEditTag);
+      setSelectedTags(updatedSelectedTags);
+    }
+    setTags(updatedTags);
+    saveTags(updatedTags);
+    saveDishes(updatedDishes);
+    setEditTag("");
+    setNewEditTag("");
   }
 
   async function saveTags(updatedTags: String[]) {
@@ -910,7 +990,9 @@ export default function TabTwoScreen() {
             title="Yes"
             onPress={() => {
               setCurrentDish(confirmDish);
-              setUndoLastEaten(allDishes[allDishes.indexOf(confirmDish)].lastEaten);
+              setUndoLastEaten(
+                allDishes[allDishes.indexOf(confirmDish)].lastEaten
+              );
               allDishes[allDishes.indexOf(confirmDish)].lastEaten =
                 setLastEaten(0);
               setConfirmVisible(false);
