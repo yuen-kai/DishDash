@@ -8,7 +8,6 @@ import {
   Overlay,
   Button,
   Input,
-  AirbnbRating,
   Dialog,
   Icon,
   ListItem,
@@ -28,13 +27,11 @@ export default function TabTwoScreen() {
     name: "[No dish selected!]",
     tags: [],
     lastEaten: setLastEaten(0),
-    rating: -1,
     recipe: "",
   };
   const [visible, setVisible] = React.useState(false);
   const [name, setName] = React.useState("");
   const [eaten, setEaten] = React.useState("");
-  const [rating, setRating] = React.useState(3);
   const [recipe, setRecipe] = React.useState("");
   const [editDish, setEditDish] = React.useState(noConfirmDish);
   const [expanded, setExpanded] = React.useState(false);
@@ -268,21 +265,40 @@ export default function TabTwoScreen() {
           name: "好吃的东西",
           tags: [],
           lastEaten: setLastEaten(0),
-          rating: 3,
           recipe: "",
         },
       ]);
       return;
     }
 
-    dateSpecificTagsList.add("Include papa");
-    if (await checkVegetarian()) {
-      dateSpecificTagsList.add("Vegetarian");
-    } else if (new Date().getDay() == 0) {
-      dateSpecificTagsList.add("Weekend");
-    } else if (new Date().getDay() <= 5) {
-      dateSpecificTagsList.add("Weekday");
+    const jsonValue = await AsyncStorage.getItem("tags");
+    let tagsArray =
+      jsonValue != null
+        ? JSON.parse(jsonValue)
+        : [
+            "Lunch",
+            "Include papa",
+            "Exclude papa",
+
+            //Date specific tags
+            "Vegetarian",
+            "Weekday",
+            "Weekend",
+
+            "", //placeholder for new tags,
+          ];
+
+    if (tagsArray.includes("Include papa")) {
+      dateSpecificTagsList.add("Include papa");
     }
+    if ((await checkVegetarian()) && tagsArray.includes("Vegetarian")) {
+      dateSpecificTagsList.add("Vegetarian");
+    } else if (new Date().getDay() == 0 && tagsArray.includes("Weekend")) {
+      dateSpecificTagsList.add("Weekend");
+    }
+    // else if (new Date().getDay() <= 5 && tagsArray.includes("Weekday")) {
+    //   dateSpecificTagsList.add("Weekday");
+    // }
 
     setSelectedTags(dateSpecificTagsList);
     updateFilter(dateSpecificTagsList, savedDishes);
@@ -298,7 +314,7 @@ export default function TabTwoScreen() {
   }
 
   function getLastEaten(milliseconds: number) {
-    return (
+    return Math.round(
       (new Date().setHours(0, 0, 0, 0) - milliseconds) / (1000 * 60 * 60 * 24)
     );
   }
@@ -314,217 +330,186 @@ export default function TabTwoScreen() {
                 name: "Hotdog",
                 tags: ["Lunch"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Burger",
                 tags: ["Lunch"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Dumplings",
                 tags: ["Lunch"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Curry",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Honey Chicken",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Sesame Chicken",
                 tags: ["Exclude papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Chicken/pork chop",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 5,
                 recipe: "",
               },
               {
                 name: "Chicken rice",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Fried rice",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Salmon",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Tilapia",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Orange fried tofu",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Stir fry potato",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Tomato eggs",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Fried tofu cucumber",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "公保鸡",
                 tags: ["Exclude papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "佐公鸡",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 5,
                 recipe: "",
               },
               {
                 name: "Microwave Chicken",
                 tags: ["Exclude papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Roasted Chicken",
                 tags: ["Exclude papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "葱油鸡",
                 tags: ["Exclude papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "炒米粉",
                 tags: ["Include papa", "Weekend"],
                 lastEaten: setLastEaten(14),
-                rating: 5,
                 recipe: "",
               },
               {
                 name: "炒果条",
                 tags: ["Include papa", "Weekend"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "面擀面汤",
                 tags: ["Lunch", "Include papa", "Weekend"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "炒面",
                 tags: ["Include papa", "Weekend"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "炒虾面",
                 tags: ["Include papa", "Weekend"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "青椒肉丝",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Sweet sour pork",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "炒萝卜糕",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 4,
                 recipe: "",
               },
               {
                 name: "Dark soy sauce silky tofu",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Ketchup silky tofu",
                 tags: ["Include papa", "Vegetarian", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
               {
                 name: "Potato 肉",
                 tags: ["Include papa", "Weekday"],
                 lastEaten: setLastEaten(14),
-                rating: 3,
                 recipe: "",
               },
             ];
@@ -537,20 +522,18 @@ export default function TabTwoScreen() {
   }
 
   function changeFilter(l: string) {
-    const updatedTags = new Set(selectedTags);
-    if (selectedTags.has(l)) {
-      updatedTags.delete(l);
-    } else {
-      updatedTags.add(l);
-    }
+    const updatedTags = new Set<string>().add(l);
+    console.log(updatedTags);
     setSelectedTags(updatedTags);
     updateFilter(updatedTags, allDishes);
+    setExpanded(!expanded);
   }
 
   function updateFilter(
     updatedSelectedTags: Set<string>,
     listOfAllDishes: Dish[]
   ) {
+    listOfAllDishes.sort(sortFuction);
     setDishes(
       updatedSelectedTags.size == 0
         ? listOfAllDishes
@@ -563,7 +546,6 @@ export default function TabTwoScreen() {
             return true;
           })
     );
-    console.log(updatedSelectedTags);
   }
 
   function changeTags(i: number) {
@@ -602,11 +584,7 @@ export default function TabTwoScreen() {
   }
 
   const sortFuction = (a: Dish, b: Dish) => {
-    return (
-      getLastEaten(b.lastEaten) +
-      b.rating -
-      (getLastEaten(a.lastEaten) + a.rating)
-    );
+    return getLastEaten(b.lastEaten) - getLastEaten(a.lastEaten);
   };
 
   function handleSave() {
@@ -624,19 +602,21 @@ export default function TabTwoScreen() {
     }
 
     let updatedDishes = [...allDishes];
+    let newDish = {
+      name: name,
+      tags: tags.filter((value, index) => tagsChecked[index]),
+      lastEaten: setLastEaten(parseInt(eaten)),
+      recipe: recipe,
+    };
     if (
       editDish.name != noConfirmDish.name &&
       allDishes.indexOf(editDish) != -1
     ) {
-      updatedDishes.splice(allDishes.indexOf(editDish), 1);
+      updatedDishes.splice(allDishes.indexOf(editDish), 1, newDish);
+    } else {
+      updatedDishes.push(newDish);
     }
-    updatedDishes.push({
-      name: name,
-      tags: tags.filter((value, index) => tagsChecked[index]),
-      lastEaten: setLastEaten(parseInt(eaten)),
-      rating: rating,
-      recipe: recipe,
-    });
+
     saveDishes(updatedDishes);
     resetAddDish();
   }
@@ -646,7 +626,6 @@ export default function TabTwoScreen() {
     setName("");
     setTagsChecked(tagsChecked.fill(false));
     setEaten("");
-    setRating(3);
     setRecipe("");
     setEditDish(noConfirmDish);
   }
@@ -765,13 +744,6 @@ export default function TabTwoScreen() {
                 {currentDish.tags.join(", ")}
               </ListItem.Subtitle>
             ) : null}
-            <AirbnbRating
-              ratingContainerStyle={{ marginTop: 20, alignSelf: "center" }}
-              size={25}
-              showRating={false}
-              isDisabled={true}
-              defaultRating={currentDish.rating}
-            />
             {currentDish.recipe != "" ? (
               <TouchableOpacity
                 onPress={() => Linking.openURL(currentDish.recipe)}
@@ -800,8 +772,6 @@ export default function TabTwoScreen() {
                 ].lastEaten = undoLastEaten;
 
                 setCurrentVisible(false);
-
-                updatedDishes.sort(sortFuction);
                 updateFilter(selectedTags, updatedDishes);
                 setAllDishes(updatedDishes);
                 saveAllDishes(updatedDishes);
@@ -950,7 +920,6 @@ export default function TabTwoScreen() {
                 onPress={() => {
                   setName(item.name);
                   setEaten(getLastEaten(item.lastEaten).toString());
-                  setRating(item.rating);
                   setRecipe(item.recipe);
                   let tempTagsChecked = new Array(tags.length).fill(false);
                   for (let i = 0; i < tags.length; i++) {
@@ -985,6 +954,24 @@ export default function TabTwoScreen() {
           title={"Are you sure you want to cook " + confirmDish.name + "?"}
           titleStyle={{ color: Colors[colorScheme ?? "light"]["text"] }}
         />
+        {confirmDish.recipe != "" ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(confirmDish.recipe)}
+            style={{
+              alignSelf: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "blue",
+                textDecorationLine: "underline",
+                fontSize: 15,
+              }}
+            >
+              Recipe
+            </Text>
+          </TouchableOpacity>
+        ) : null}
         <Dialog.Actions>
           <Dialog.Button
             title="Yes"
@@ -999,7 +986,6 @@ export default function TabTwoScreen() {
               setCurrentVisible(true);
               setConfirmDish(noConfirmDish);
               let updatedDishes = [...allDishes];
-              updatedDishes.sort(sortFuction);
               updateFilter(selectedTags, updatedDishes);
               setAllDishes(updatedDishes);
               saveAllDishes(updatedDishes);
@@ -1116,13 +1102,6 @@ export default function TabTwoScreen() {
           />
         </ListItem.Accordion>
 
-        <AirbnbRating
-          showRating={false}
-          defaultRating={rating}
-          onFinishRating={(value) => setRating(value)}
-          size={30}
-          ratingContainerStyle={{ marginTop: 15 }}
-        />
         <View style={{ flexDirection: "row", marginTop: 10 }}>
           <Button
             title="Cancel"
